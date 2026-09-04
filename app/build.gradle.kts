@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // Versions are declared here rather than in a root `plugins { ... apply false }` block.
@@ -13,20 +14,27 @@ plugins {
 
 /**
  * Reads a secret from (in order) an environment variable, then a git-ignored
- * secrets.properties, then falls back to empty. Empty is a supported state: the app runs
- * fully offline-only, so a build never fails for want of a cloud credential.
+ * secrets.properties, then the committed supabase.properties. Empty is a supported result:
+ * the app runs fully offline-only, so a build never fails for want of a cloud credential.
+ *
+ * Note the explicit `Properties` import above. Inside a Gradle Kotlin DSL script, the
+ * identifier `java` resolves to the JavaPluginExtension on Project, not the java.* package,
+ * so a fully-qualified `java.util.Properties()` does not compile here.
  */
 fun secret(key: String): String {
     // 1. Environment / CI secret wins.
-    System.getenv(key)?.takeIf { it.isNotBlank() }?.let { return it }
-    // 2. Git-ignored local overrides.
-    // 3. Committed public client config (publishable key only — see supabase.properties).
-    listOf("secrets.properties", "supabase.properties").forEach { name ->
-        val f = rootProject.file(name)
-        if (f.exists()) {
-            val props = java.util.Properties().apply { f.inputStream().use { load(it) } }
-            props.getProperty(key)?.takeIf { it.isNotBlank() }?.let { return it }
-        }
+    val fromEnv = System.getenv(key)
+    if (!fromEnv.isNullOrBlank()) return fromEnv
+
+    // 2. Git-ignored local overrides, then 3. committed public client config
+    //    (publishable key only — see supabase.properties).
+    for (name in listOf("secrets.properties", "supabase.properties")) {
+        val file = rootProject.file(name)
+        if (!file.exists()) continue
+        val props = Properties()
+        file.inputStream().use { stream -> props.load(stream) }
+        val value = props.getProperty(key)
+        if (!value.isNullOrBlank()) return value
     }
     return ""
 }
