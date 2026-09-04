@@ -5,6 +5,9 @@ on:
     branches: ["**"]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -71,6 +74,36 @@ jobs:
             unzip -l "$apk" | grep -q classes.dex || { echo "No dex in $apk"; exit 1; }
           done
           echo "APK structure verified."
+
+      - name: Publish APKs to the apk branch
+        if: success()
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          set -euo pipefail
+          staging="$(mktemp -d)"
+          find app/build/outputs/apk -name "*.apk" -exec cp {} "$staging"/ \;
+          ls -la "$staging"
+          cat > "$staging/README.md" <<EOF
+          # Winter Arc — built APKs
+
+          Built from \`${GITHUB_SHA}\` by workflow run \`${GITHUB_RUN_ID}\`.
+
+          This branch is force-recreated on every successful build and holds no history,
+          so it never grows. Install \`app-debug.apk\` first: it is not minified, so a
+          crash produces a readable stack trace, and its application id is
+          \`com.winterarc.app.debug\`, so it can sit alongside a release build.
+          EOF
+          # Orphan branch: one commit, current APKs only, no accumulated binaries.
+          git -C "$staging" init -q -b apk
+          git -C "$staging" add -A
+          git -C "$staging" commit -q -m "APKs from ${GITHUB_SHA}"
+          git -C "$staging" push -q --force \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" apk
+          echo "Published APKs to the apk branch."
 
       - name: Upload test results
         if: always()
