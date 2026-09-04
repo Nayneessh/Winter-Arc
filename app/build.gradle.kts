@@ -1,11 +1,12 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-// Versions are declared here rather than in a root `plugins { ... } apply false` block, so that a
-// build which never applies the Android plugin does not have to resolve it. See settings.gradle.kts.
+// Only the Android Gradle Plugin carries its version here. It is served from dl.google.com, so
+// naming it in the root block would force even the core-only build to resolve it. The Kotlin
+// plugin versions live in the root block, because loading Kotlin twice is what Gradle warns about.
 plugins {
     id("com.android.application") version "8.7.3"
-    id("org.jetbrains.kotlin.android") version "2.0.21"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21"
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
