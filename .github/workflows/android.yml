@@ -34,20 +34,20 @@ jobs:
       # Running it first means a logic regression fails the build before we spend time
       # assembling an APK.
       - name: Run domain unit tests
-        run: ./gradlew :core:domain:test --stacktrace
+        run: ./gradlew :core:domain:test
 
       - name: Run app unit tests
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
+        run: ./gradlew :app:testDebugUnitTest
 
       - name: Lint
-        run: ./gradlew :app:lintDebug --stacktrace
+        run: ./gradlew :app:lintDebug
         continue-on-error: true
 
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug
 
       - name: Build release APK
-        run: ./gradlew :app:assembleRelease --stacktrace
+        run: ./gradlew :app:assembleRelease
 
       - name: Report APK details
         run: |

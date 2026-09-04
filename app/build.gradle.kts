@@ -11,6 +11,29 @@ plugins {
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
 }
 
+/**
+ * Reads a secret from (in order) an environment variable, then a git-ignored
+ * secrets.properties, then falls back to empty. Empty is a supported state: the app runs
+ * fully offline-only, so a build never fails for want of a cloud credential.
+ */
+fun secret(key: String): String {
+    // 1. Environment / CI secret wins.
+    System.getenv(key)?.takeIf { it.isNotBlank() }?.let { return it }
+    // 2. Git-ignored local overrides.
+    // 3. Committed public client config (publishable key only — see supabase.properties).
+    listOf("secrets.properties", "supabase.properties").forEach { name ->
+        val f = rootProject.file(name)
+        if (f.exists()) {
+            val props = java.util.Properties().apply { f.inputStream().use { load(it) } }
+            props.getProperty(key)?.takeIf { it.isNotBlank() }?.let { return it }
+        }
+    }
+    return ""
+}
+
+fun supabaseUrl(): String = secret("SUPABASE_URL")
+fun supabaseAnonKey(): String = secret("SUPABASE_ANON_KEY")
+
 android {
     namespace = "com.winterarc.app"
     compileSdk = 35
@@ -129,26 +152,3 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
-
-/**
- * Reads a secret from (in order) an environment variable, then a git-ignored
- * secrets.properties, then falls back to empty. Empty is a supported state: the app runs
- * fully offline-only, so a build never fails for want of a cloud credential.
- */
-fun secret(key: String): String {
-    // 1. Environment / CI secret wins.
-    System.getenv(key)?.takeIf { it.isNotBlank() }?.let { return it }
-    // 2. Git-ignored local overrides.
-    // 3. Committed public client config (publishable key only — see supabase.properties).
-    listOf("secrets.properties", "supabase.properties").forEach { name ->
-        val f = rootProject.file(name)
-        if (f.exists()) {
-            val props = java.util.Properties().apply { f.inputStream().use { load(it) } }
-            props.getProperty(key)?.takeIf { it.isNotBlank() }?.let { return it }
-        }
-    }
-    return ""
-}
-
-fun supabaseUrl(): String = secret("SUPABASE_URL")
-fun supabaseAnonKey(): String = secret("SUPABASE_ANON_KEY")
