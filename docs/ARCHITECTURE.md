@@ -181,9 +181,10 @@ each, against a dependency plus a theming fight plus release-build risk.
 | Layer | Approach |
 |---|---|
 | Domain | 80 JUnit tests, run locally and in CI. Covers the engine, all analytics, unit conversion and seed integrity. |
-| App unit | Runs in CI. |
+| App unit | 12 mapper round-trip tests. Entity and domain types are plain data classes, so these run on the JVM in CI without a device. |
 | Lint | Android Lint in CI, non-blocking. |
 | APK structure | CI verifies each APK contains a manifest and dex rather than trusting a green build. |
 
 The domain tests are the ones that matter most: they cover every number the user is asked to
-trust, and they run without a device.
+trust, and they run without a device. What no automated test here covers is whether a screen
+renders — see the limitations in `docs/TEST-REPORT.md`.

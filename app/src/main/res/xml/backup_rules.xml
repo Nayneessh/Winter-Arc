@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup rules for Android 11 and below.
+
+  Once any <include> is declared, ONLY the included paths are backed up. An <exclude> is
+  therefore only meaningful — and only valid — inside a path that is included first. The
+  datastore directory is included so display preferences survive a restore, and the sync
+  file is then excluded from within it, because it holds the Supabase auth tokens and those
+  must never leave the device in a backup.
+-->
 <full-backup-content>
     <include domain="database" path="winter_arc.db" />
     <include domain="database" path="winter_arc.db-wal" />
     <include domain="sharedpref" path="." />
-    <!-- Auth tokens must never leave the device in a backup. -->
+    <include domain="file" path="datastore/" />
     <exclude domain="file" path="datastore/winter_arc_sync.preferences_pb" />
 </full-backup-content>

@@ -110,10 +110,10 @@ git-ignored.
 ## Development
 
 ```bash
-# Business logic tests. Runs without the Android SDK.
+# Business logic tests (80). Runs without the Android SDK.
 WINTER_ARC_DOMAIN_ONLY=1 ./gradlew :core:domain:test
 
-# Everything
+# Everything (92 tests)
 ./gradlew :core:domain:test :app:testDebugUnitTest :app:lintDebug
 ```
 

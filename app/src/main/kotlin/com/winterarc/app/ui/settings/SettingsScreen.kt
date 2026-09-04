@@ -121,9 +121,14 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
             runCatching {
                 val exporter = DataExporter(context, container.repository)
                 val file = if (csv) exporter.exportCsv() else exporter.exportJson()
-                context.startActivity(
-                    Intent.createChooser(exporter.shareIntent(file), "Export Winter Arc data"),
-                )
+                val chooser = Intent.createChooser(exporter.shareIntent(file), "Export Winter Arc data")
+                // LocalContext is normally the Activity, but a Compose host may hand back a
+                // plain ContextWrapper, and starting an activity from one without this flag
+                // throws. Adding it only in that case keeps the normal path unchanged.
+                if (context !is android.app.Activity) {
+                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(chooser)
             }.onFailure {
                 _state.value = _state.value.copy(syncStatus = "Export failed: ${it.message}")
             }

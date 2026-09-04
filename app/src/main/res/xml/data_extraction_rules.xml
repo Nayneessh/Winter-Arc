@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup and device-transfer rules for Android 12 and above.
+
+  Same rule as backup_rules.xml: an <exclude> must sit inside an included path, so the
+  datastore directory is included and the sync file excluded from within it. That file holds
+  the Supabase auth tokens, which must never leave the device.
+-->
 <data-extraction-rules>
     <cloud-backup>
         <include domain="database" path="winter_arc.db" />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="datastore/" />
         <exclude domain="file" path="datastore/winter_arc_sync.preferences_pb" />
     </cloud-backup>
     <device-transfer>
         <include domain="database" path="winter_arc.db" />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="datastore/" />
         <exclude domain="file" path="datastore/winter_arc_sync.preferences_pb" />
     </device-transfer>
 </data-extraction-rules>
