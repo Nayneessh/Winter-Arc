@@ -3,6 +3,8 @@ package com.winterarc.app.ui.home
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -82,7 +84,7 @@ fun HomeScreen(
                 }
                 IconButton(onClick = onOpenSettings) {
                     Icon(
-                        androidx.compose.material.icons.Icons.Default.Settings,
+                        Icons.Default.Settings,
                         "Settings",
                         tint = WinterArcColors.Muted,
                     )

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -409,7 +410,10 @@ fun TemplateEditorScreen(
             }
             item { GoldButton("+ Add exercise", { showAdd = true }, Modifier.fillMaxWidth()) }
 
-            itemsIndexed2(working.exercises.sortedBy { it.position }) { index, pe ->
+            itemsIndexed(
+                items = working.exercises.sortedBy { it.position },
+                key = { _, item -> item.id },
+            ) { index, pe ->
                 WinterCard(onClick = { editingIndex = index }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -623,12 +627,3 @@ private fun Num(
         modifier = modifier,
     )
 }
-
-/** Local helper: LazyListScope.itemsIndexed with a stable key derived from the planned id. */
-private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexed2(
-    list: List<PlannedExercise>,
-    content: @Composable (Int, PlannedExercise) -> Unit,
-) = androidx.compose.foundation.lazy.itemsIndexed(
-    items = list,
-    key = { _, item -> item.id },
-) { index, item -> content(index, item) }

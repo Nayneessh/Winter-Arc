@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -157,7 +158,7 @@ fun BarChart(
                     color = if (i == points.lastIndex) barColor else barColor.copy(alpha = 0.55f),
                     topLeft = Offset(i * (barWidth + gap), size.height - h),
                     size = Size(barWidth, h),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f, 6f),
+                    cornerRadius = CornerRadius(6f, 6f),
                 )
             }
         }
