@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="night_deep">#FF061512</color>
-    <color name="gold">#FFD9B25F</color>
+    <color name="night">#FF050D0C</color>
+    <color name="gold">#FFE8C069</color>
 </resources>

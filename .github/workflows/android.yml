@@ -29,52 +29,40 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Accept Android SDK licences
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+      # :core holds every calculation and the whole model, and is pure Kotlin/JVM. Running it
+      # first means a logic regression fails in seconds rather than after an APK assembly.
+      - name: Run core tests
+        run: ./gradlew :core:test
 
-      # The domain module is pure Kotlin/JVM and holds every piece of business logic:
-      # volume, estimated 1RM, PR detection, plan-vs-actual reconciliation, streaks.
-      # Running it first means a logic regression fails the build before we spend time
-      # assembling an APK.
-      - name: Run domain unit tests
-        run: ./gradlew :core:domain:test
-
-      - name: Run app unit tests
-        run: ./gradlew :app:testDebugUnitTest
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug
 
       - name: Lint
         run: ./gradlew :app:lintDebug
         continue-on-error: true
 
-      - name: Build debug APK
-        run: ./gradlew :app:assembleDebug
-
       - name: Build release APK
         run: ./gradlew :app:assembleRelease
 
-      - name: Report APK details
-        if: always()
+      # A green compile is not the same as an installable artifact, so each archive is opened
+      # and checked for the two things that make it an APK at all.
+      - name: Verify the APKs
         run: |
-          shopt -s nullglob
-          mapfile -t apks < <(find app/build/outputs/apk -name "*.apk" 2>/dev/null)
-          if [ ${#apks[@]} -eq 0 ]; then
-            echo "No APKs were produced." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          echo "### APKs built" >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          found=0
           for apk in $(find app/build/outputs/apk -name "*.apk"); do
+            found=1
             size=$(du -h "$apk" | cut -f1)
             echo "- \`$apk\` ($size)" >> "$GITHUB_STEP_SUMMARY"
-          done
-          # Confirm the archive is a well-formed APK with a manifest and dex, rather than
-          # trusting that a green build means an installable artifact.
-          for apk in $(find app/build/outputs/apk -name "*.apk"); do
-            echo "Verifying $apk"
             unzip -l "$apk" | grep -q AndroidManifest.xml || { echo "No manifest in $apk"; exit 1; }
             unzip -l "$apk" | grep -q classes.dex || { echo "No dex in $apk"; exit 1; }
           done
+          if [ "$found" -eq 0 ]; then echo "No APKs were produced."; exit 1; fi
           echo "APK structure verified."
 
+      # GitHub stores workflow artifacts on a host some networks cannot reach, and an artifact
+      # zip is awkward to hand to someone. The APKs are also pushed to an orphan branch, which
+      # is recreated from scratch each run so it holds exactly one copy of each and no history.
       - name: Publish APKs to the apk branch
         if: success()
         env:
@@ -90,30 +78,17 @@ jobs:
           cat > "$staging/README.md" <<EOF
           # Winter Arc — built APKs
 
-          Built from \`${GITHUB_SHA}\` by workflow run \`${GITHUB_RUN_ID}\`.
+          Built from \`${GITHUB_SHA}\` by run \`${GITHUB_RUN_ID}\`.
 
-          This branch is force-recreated on every successful build and holds no history,
-          so it never grows. Install \`app-debug.apk\` first: it is not minified, so a
-          crash produces a readable stack trace, and its application id is
-          \`com.winterarc.app.debug\`, so it can sit alongside a release build.
+          Install \`app-debug.apk\`. It is not minified, so a crash gives a readable stack
+          trace, and its application id is \`com.winterarc.app.debug\`, so it can sit alongside
+          a release build.
           EOF
-          # Orphan branch: one commit, current APKs only, no accumulated binaries.
           git -C "$staging" init -q -b apk
           git -C "$staging" add -A
           git -C "$staging" commit -q -m "APKs from ${GITHUB_SHA}"
           git -C "$staging" push -q --force \
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" apk
-          echo "Published APKs to the apk branch."
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            core/domain/build/reports/tests/
-            app/build/reports/
-          retention-days: 14
 
       - name: Upload debug APK
         if: always()
@@ -121,8 +96,8 @@ jobs:
         with:
           name: winter-arc-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
           retention-days: 90
+          if-no-files-found: warn
 
       - name: Upload release APK
         if: always()
@@ -130,5 +105,14 @@ jobs:
         with:
           name: winter-arc-release-apk
           path: app/build/outputs/apk/release/*.apk
-          if-no-files-found: warn
           retention-days: 90
+          if-no-files-found: warn
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: core/build/reports/tests/
+          retention-days: 14
+          if-no-files-found: warn

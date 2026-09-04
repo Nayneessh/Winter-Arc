@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A stylised "arc" over a bar: the winter arc mark. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- The arc: an open ring swept three quarters round, gold, with the gap at the lower right.
+         Content is kept inside the 66dp safe zone so no launcher mask can clip it. -->
     <path
-        android:pathData="M30,66 A24,24 0 0 1 78,66"
-        android:strokeColor="#D9B25F"
-        android:strokeWidth="7"
+        android:pathData="M75.5,75.5 A26,26 0 1 0 54,80"
+        android:strokeColor="#FFE8C069"
+        android:strokeWidth="8"
         android:strokeLineCap="round" />
+    <!-- The head of the arc, marking progress along it. -->
     <path
-        android:pathData="M28,76 L80,76"
-        android:strokeColor="#D9B25F"
-        android:strokeWidth="7"
-        android:strokeLineCap="round" />
-    <path
-        android:pathData="M54,34 L54,52"
-        android:strokeColor="#F2CE7A"
-        android:strokeWidth="5"
-        android:strokeLineCap="round" />
+        android:pathData="M75.5,75.5 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:fillColor="#FFF5DA9B" />
 </vector>

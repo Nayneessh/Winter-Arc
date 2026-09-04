@@ -1,451 +1,600 @@
 package com.winterarc.app.ui.settings
 
-import android.content.Context
-import android.content.Intent
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.winterarc.app.AppContainer
-import com.winterarc.app.data.prefs.UserSettings
-import com.winterarc.app.data.repo.DataExporter
-import com.winterarc.app.data.sync.SyncEngine
-import com.winterarc.app.ui.components.*
-import com.winterarc.app.ui.theme.WinterArcColors
-import com.winterarc.domain.model.LengthUnit
-import com.winterarc.domain.model.WeightUnit
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import com.winterarc.app.Repository
+import com.winterarc.app.ui.kit.ArcCard
+import com.winterarc.app.ui.kit.GhostButton
+import com.winterarc.app.ui.kit.GoldButton
+import com.winterarc.app.ui.kit.HairLine
+import com.winterarc.app.ui.kit.Label
+import com.winterarc.app.ui.kit.OverlayScreen
+import com.winterarc.app.ui.kit.SectionHeader
+import com.winterarc.app.ui.kit.SegmentedControl
+import com.winterarc.app.ui.kit.SettingRow
+import com.winterarc.app.ui.kit.SheetTitle
+import com.winterarc.app.ui.kit.WinterField
+import com.winterarc.app.ui.kit.WinterSheet
+import com.winterarc.app.ui.kit.WinterSwitch
+import com.winterarc.app.ui.plan.ExercisePickerSheet
+import com.winterarc.app.ui.theme.W
+import com.winterarc.core.Actions
+import com.winterarc.core.AppData
+import com.winterarc.core.Fmt
+import com.winterarc.core.Goals
+import com.winterarc.core.LiftGoal
+import com.winterarc.core.WeightUnit
+import com.winterarc.core.newId
 
-data class SettingsUiState(
-    val settings: UserSettings = UserSettings(),
-    val signedInUserId: String? = null,
-    val syncConfigured: Boolean = false,
-    val syncStatus: String? = null,
-    val busy: Boolean = false,
-    val exerciseCount: Int = 0,
-    val sessionCount: Int = 0,
-)
-
-class SettingsViewModel(private val container: AppContainer) : ViewModel() {
-    private val _state = MutableStateFlow(SettingsUiState())
-    val state: StateFlow<SettingsUiState> = _state.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            container.settings.settings.collect { s -> _state.value = _state.value.copy(settings = s) }
-        }
-        viewModelScope.launch {
-            _state.value = _state.value.copy(
-                signedInUserId = container.syncEngine.signedInUserId(),
-                syncConfigured = container.syncEngine.isConfigured,
-                exerciseCount = container.repository.allExercises().size,
-                sessionCount = container.repository.completedHistory().size,
-            )
-        }
-    }
-
-    fun setWeightUnit(u: WeightUnit) = viewModelScope.launch { container.settings.setWeightUnit(u) }
-    fun setLengthUnit(u: LengthUnit) = viewModelScope.launch { container.settings.setLengthUnit(u) }
-    fun setTimerSound(v: Boolean) = viewModelScope.launch { container.settings.setTimerSound(v) }
-    fun setTimerVibration(v: Boolean) = viewModelScope.launch { container.settings.setTimerVibration(v) }
-    fun setAutoTimer(v: Boolean) = viewModelScope.launch { container.settings.setAutoStartTimer(v) }
-    fun setKeepScreenOn(v: Boolean) = viewModelScope.launch { container.settings.setKeepScreenOn(v) }
-
-    fun signIn(email: String, password: String, createAccount: Boolean) {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(busy = true, syncStatus = null)
-            val result = if (createAccount) {
-                container.syncEngine.signUp(email, password)
-            } else {
-                container.syncEngine.signIn(email, password)
-            }
-            _state.value = _state.value.copy(
-                busy = false,
-                signedInUserId = container.syncEngine.signedInUserId(),
-                syncStatus = result.fold(
-                    onSuccess = { if (createAccount) "Account created and signed in." else "Signed in." },
-                    onFailure = { it.message },
-                ),
-            )
-            if (result.isSuccess) {
-                container.settings.setSyncEnabled(true)
-                container.settings.setSupabaseEmail(email)
-            }
-        }
-    }
-
-    fun signOut() {
-        viewModelScope.launch {
-            container.syncEngine.signOut()
-            container.settings.setSyncEnabled(false)
-            _state.value = _state.value.copy(signedInUserId = null, syncStatus = "Signed out.")
-        }
-    }
-
-    fun syncNow() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(busy = true, syncStatus = "Syncing…")
-            val outcome = container.syncEngine.sync()
-            _state.value = _state.value.copy(
-                busy = false,
-                syncStatus = when (outcome) {
-                    is SyncEngine.Outcome.Success -> "Backed up ${outcome.pushed} records."
-                    is SyncEngine.Outcome.Skipped -> outcome.reason
-                    is SyncEngine.Outcome.Failed -> "Sync failed: ${outcome.reason}"
-                },
-            )
-        }
-    }
-
-    fun export(context: Context, csv: Boolean) {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(busy = true)
-            runCatching {
-                val exporter = DataExporter(context, container.repository)
-                val file = if (csv) exporter.exportCsv() else exporter.exportJson()
-                val chooser = Intent.createChooser(exporter.shareIntent(file), "Export Winter Arc data")
-                // LocalContext is normally the Activity, but a Compose host may hand back a
-                // plain ContextWrapper, and starting an activity from one without this flag
-                // throws. Adding it only in that case keeps the normal path unchanged.
-                if (context !is android.app.Activity) {
-                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(chooser)
-            }.onFailure {
-                _state.value = _state.value.copy(syncStatus = "Export failed: ${it.message}")
-            }
-            _state.value = _state.value.copy(busy = false)
-        }
-    }
-
-    fun deleteAllData() {
-        viewModelScope.launch {
-            container.repository.deleteAllData()
-            container.seeder.seedIfEmpty()
-            _state.value = _state.value.copy(syncStatus = "All local data deleted and the programme re-seeded.")
-        }
-    }
-
-    class Factory(private val container: AppContainer) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T = SettingsViewModel(container) as T
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Settings, targets and the data itself.
+ *
+ * Export is deliberately prominent. Everything lives in one file on this device and nowhere
+ * else, which is a feature -- but only if getting a copy out is trivial.
+ */
 @Composable
 fun SettingsScreen(
-    state: SettingsUiState,
-    vm: SettingsViewModel,
-    onOpenLibrary: () -> Unit,
-    onOpenTemplates: () -> Unit,
+    data: AppData,
+    repository: Repository,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
-    var showDelete by remember { mutableStateOf(false) }
-    var showSignIn by remember { mutableStateOf(false) }
+    var editingGoals by remember { mutableStateOf(false) }
+    var editingLift by remember { mutableStateOf<LiftGoal?>(null) }
+    var addingLift by remember { mutableStateOf(false) }
+    var confirmReset by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(
-        containerColor = WinterArcColors.NightDeep,
-        topBar = {
-            TopAppBar(
-                title = { Text("Settings") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back", tint = WinterArcColors.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = WinterArcColors.NightDeep,
-                    titleContentColor = WinterArcColors.White,
-                ),
-            )
-        },
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            state.syncStatus?.let {
-                WinterCard(accent = true) {
-                    Text(it, style = MaterialTheme.typography.bodyMedium, color = WinterArcColors.Gold)
+    val exportJson = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openOutputStream(uri)?.use {
+                    it.write(repository.exportJson().toByteArray())
                 }
             }
-
-            SectionLabel("Programme")
-            WinterCard {
-                SettingRow("Exercise library", "${state.exerciseCount} exercises", onOpenLibrary)
-                HorizontalDivider(color = WinterArcColors.NightBorder)
-                SettingRow("Workout templates", "Edit days, exercises, sets and pairings", onOpenTemplates)
-            }
-
-            SectionLabel("Units")
-            WinterCard {
-                Text("Weight", style = MaterialTheme.typography.bodyMedium)
-                Spacer(Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    WeightUnit.entries.forEach { u ->
-                        ChoiceChip(u.label.uppercase(), u == state.settings.weightUnit) { vm.setWeightUnit(u) }
-                    }
-                }
-                Spacer(Modifier.height(14.dp))
-                Text("Measurements", style = MaterialTheme.typography.bodyMedium)
-                Spacer(Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LengthUnit.entries.forEach { u ->
-                        ChoiceChip(u.label.uppercase(), u == state.settings.lengthUnit) { vm.setLengthUnit(u) }
-                    }
-                }
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    "Units affect display only. Everything is stored in kilograms and centimetres, " +
-                        "so switching never alters your history.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = WinterArcColors.Faint,
-                )
-            }
-
-            SectionLabel("Rest timer")
-            WinterCard {
-                ToggleRow("Start automatically after a set", state.settings.autoStartRestTimer, vm::setAutoTimer)
-                ToggleRow("Sound when the timer ends", state.settings.timerSoundEnabled, vm::setTimerSound)
-                ToggleRow("Vibrate when the timer ends", state.settings.timerVibrationEnabled, vm::setTimerVibration)
-                ToggleRow("Keep the screen on while training", state.settings.keepScreenOnDuringWorkout, vm::setKeepScreenOn)
-            }
-
-            SectionLabel("Cloud backup")
-            WinterCard {
-                if (!state.syncConfigured) {
-                    Text(
-                        "This build has no Supabase credentials compiled in, so cloud backup is " +
-                            "switched off. Everything still works — your data lives on this device.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = WinterArcColors.Muted,
-                    )
-                } else if (state.signedInUserId == null) {
-                    Text(
-                        "Sign in to back your training history up. This is optional; the app is " +
-                            "fully functional offline and never requires an account.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = WinterArcColors.Muted,
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    GoldButton("Sign in / create account", { showSignIn = true }, Modifier.fillMaxWidth())
-                } else {
-                    Text(
-                        state.settings.supabaseEmail ?: "Signed in",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        GoldButton("Back up now", vm::syncNow, Modifier.weight(1f), enabled = !state.busy)
-                        OutlineButton("Sign out", vm::signOut, Modifier.weight(1f))
-                    }
-                }
-            }
-
-            SectionLabel("Your data")
-            WinterCard {
-                Text(
-                    "${state.sessionCount} completed workouts. Export takes a full copy that you " +
-                        "can keep independently of this app.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WinterArcColors.Muted,
-                )
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlineButton("Export JSON", { vm.export(context, csv = false) }, Modifier.weight(1f))
-                    OutlineButton("Export CSV", { vm.export(context, csv = true) }, Modifier.weight(1f))
-                }
-            }
-
-            SectionLabel("Danger zone")
-            WinterCard {
-                Text(
-                    "Delete every workout, measurement and custom exercise on this device.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WinterArcColors.Muted,
-                )
-                Spacer(Modifier.height(10.dp))
-                OutlinedButton(
-                    onClick = { showDelete = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = WinterArcColors.Danger),
-                ) { Text("Delete all data") }
-            }
-
-            SectionLabel("About")
-            WinterCard {
-                Text("Winter Arc", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "A personal training log. Volume means weight × reps across working sets. " +
-                        "Estimated 1RM uses the Epley formula and is never a tested maximum.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = WinterArcColors.Muted,
-                )
-            }
-
-            Spacer(Modifier.height(28.dp))
+            status = "Backup written."
         }
     }
 
-    if (showDelete) {
-        AlertDialog(
-            onDismissRequest = { showDelete = false },
-            containerColor = WinterArcColors.NightElevated,
-            title = { Text("Delete everything?", color = WinterArcColors.White) },
-            text = {
-                Text(
-                    "Every workout, set, measurement and custom exercise on this device will be " +
-                        "erased. This cannot be undone. Export your data first if you want to keep it.",
-                    color = WinterArcColors.Muted,
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { showDelete = false; vm.deleteAllData() }) {
-                    Text("Delete everything", color = WinterArcColors.Danger)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDelete = false }) {
-                    Text("Cancel", color = WinterArcColors.Muted)
-                }
-            },
-        )
-    }
-
-    if (showSignIn) {
-        SignInDialog(
-            busy = state.busy,
-            onDismiss = { showSignIn = false },
-            onSubmit = { email, password, create ->
-                vm.signIn(email, password, create); showSignIn = false
-            },
-        )
-    }
-}
-
-@Composable
-private fun SignInDialog(
-    busy: Boolean,
-    onDismiss: () -> Unit,
-    onSubmit: (String, String, Boolean) -> Unit,
-) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var create by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = WinterArcColors.NightElevated,
-        title = { Text(if (create) "Create account" else "Sign in", color = WinterArcColors.White) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = create,
-                        onCheckedChange = { create = it },
-                        colors = CheckboxDefaults.colors(checkedColor = WinterArcColors.Gold),
-                    )
-                    Text("I need a new account", color = WinterArcColors.Muted)
+    val exportSets = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv"),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openOutputStream(uri)?.use {
+                    it.write(repository.exportSetsCsv().toByteArray())
                 }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onSubmit(email.trim(), password, create) },
-                enabled = !busy && email.isNotBlank() && password.length >= 6,
-            ) { Text(if (create) "Create" else "Sign in", color = WinterArcColors.Gold) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = WinterArcColors.Muted) }
-        },
-    )
-}
+            status = "Every set exported."
+        }
+    }
 
-@Composable
-private fun SettingRow(title: String, subtitle: String, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-    ) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = WinterArcColors.Muted)
+    val exportBody = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv"),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openOutputStream(uri)?.use {
+                    it.write(repository.exportBodyCsv().toByteArray())
+                }
+            }
+            status = "Body data exported."
+        }
+    }
+
+    val importJson = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            val text = runCatching {
+                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            }.getOrNull()
+            status = if (text != null && repository.importJson(text)) {
+                "Restored from backup."
+            } else {
+                "That file could not be read as a Winter Arc backup."
+            }
+        }
+    }
+
+    OverlayScreen(title = "Settings", onBack = onBack) {
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 40.dp),
+        ) {
+            SectionHeader("Units and behaviour")
+            ArcCard {
+                Label("Weight unit")
+                Spacer(Modifier.height(10.dp))
+                SegmentedControl(
+                    options = WeightUnit.entries.map { it.display },
+                    selectedIndex = WeightUnit.entries.indexOf(data.prefs.unit),
+                    onSelect = { index ->
+                        repository.update {
+                            Actions.updatePrefs(it, it.prefs.copy(unit = WeightUnit.entries[index]))
+                        }
+                    },
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Everything is stored in kilograms whatever you choose here, so switching " +
+                        "never rewrites a single recorded set.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = W.Ghost,
+                )
+
+                Spacer(Modifier.height(16.dp))
+                HairLine()
+                SettingRow(
+                    title = "Weight step",
+                    subtitle = "The increment offered on the keypad",
+                    trailing = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            listOf(1.0, 2.5, 5.0).forEach { step ->
+                                val on = data.prefs.weightStepKg == step
+                                Text(
+                                    Fmt.trim(step),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (on) W.Void else W.Muted,
+                                    modifier = Modifier
+                                        .padding(start = 6.dp)
+                                        .clip(RoundedCornerShape(9.dp))
+                                        .background(if (on) W.Gold else W.Void.copy(alpha = 0.5f))
+                                        .clickable {
+                                            repository.update {
+                                                Actions.updatePrefs(it, it.prefs.copy(weightStepKg = step))
+                                            }
+                                        }
+                                        .padding(horizontal = 11.dp, vertical = 7.dp),
+                                )
+                            }
+                        }
+                    },
+                )
+                HairLine()
+                SettingRow(
+                    title = "Start rest automatically",
+                    subtitle = "Begins the countdown the moment a set is ticked",
+                    trailing = {
+                        WinterSwitch(data.prefs.restTimerAutoStart) { on ->
+                            repository.update {
+                                Actions.updatePrefs(it, it.prefs.copy(restTimerAutoStart = on))
+                            }
+                        }
+                    },
+                )
+                HairLine()
+                SettingRow(
+                    title = "Keep the screen awake",
+                    subtitle = "Only while a workout is actually in progress",
+                    trailing = {
+                        WinterSwitch(data.prefs.keepScreenOn) { on ->
+                            repository.update {
+                                Actions.updatePrefs(it, it.prefs.copy(keepScreenOn = on))
+                            }
+                        }
+                    },
+                )
+            }
+
+            Spacer(Modifier.height(22.dp))
+            SectionHeader("Targets")
+            ArcCard(onClick = { editingGoals = true }) {
+                GoalLine(
+                    "Bodyweight",
+                    data.goals.startWeightKg,
+                    data.goals.targetWeightKg,
+                    data.prefs.unit.suffix,
+                    data.prefs.unit,
+                )
+                Spacer(Modifier.height(10.dp))
+                GoalLine(
+                    "Body fat",
+                    data.goals.startBodyFatPct,
+                    data.goals.targetBodyFatPct,
+                    "%",
+                    null,
+                )
+                Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        "Sessions per week",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = W.Muted,
+                    )
+                    Text(
+                        data.goals.weeklySessionTarget.toString(),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = W.Ink,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Text("Tap to edit", style = MaterialTheme.typography.labelSmall, color = W.Ghost)
+            }
+
+            Spacer(Modifier.height(14.dp))
+            SectionHeader("Lift goals")
+            data.goals.liftGoals.forEach { goal ->
+                ArcCard(
+                    Modifier.padding(bottom = 9.dp),
+                    onClick = { editingLift = goal },
+                    padding = PaddingValues(14.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                goal.label.ifBlank { data.exerciseName(goal.exerciseId) },
+                                style = MaterialTheme.typography.titleMedium,
+                                color = W.Ink,
+                            )
+                            Text(
+                                data.exerciseName(goal.exerciseId),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = W.Ghost,
+                            )
+                        }
+                        Text(
+                            "${Fmt.weight(goal.startKg, data.prefs.unit)} → " +
+                                "${Fmt.weight(goal.milestoneKg, data.prefs.unit)} → " +
+                                Fmt.weightWithUnit(goal.targetKg, data.prefs.unit),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = W.GoldBright,
+                        )
+                    }
+                }
+            }
+            GhostButton(
+                "Add a lift goal",
+                { addingLift = true },
+                Modifier.fillMaxWidth(),
+                icon = Icons.Filled.Add,
+            )
+
+            Spacer(Modifier.height(22.dp))
+            SectionHeader("Your data")
+            ArcCard {
+                Text(
+                    "Everything lives in one file on this phone. No account, no server, and it " +
+                        "works with the aeroplane mode on forever.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = W.Muted,
+                )
+                Spacer(Modifier.height(16.dp))
+                GhostButton(
+                    "Back up everything (JSON)",
+                    { exportJson.launch("winter-arc-backup.json") },
+                    Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.Download,
+                )
+                Spacer(Modifier.height(9.dp))
+                GhostButton(
+                    "Export every set (CSV)",
+                    { exportSets.launch("winter-arc-sets.csv") },
+                    Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.Download,
+                )
+                Spacer(Modifier.height(9.dp))
+                GhostButton(
+                    "Export body data (CSV)",
+                    { exportBody.launch("winter-arc-body.csv") },
+                    Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.Download,
+                )
+                Spacer(Modifier.height(9.dp))
+                GhostButton(
+                    "Restore from a backup",
+                    { importJson.launch(arrayOf("application/json", "text/plain", "*/*")) },
+                    Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.Upload,
+                )
+                if (status != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(status!!, style = MaterialTheme.typography.bodySmall, color = W.Good)
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
+            SectionHeader("Reset")
+            ArcCard {
+                Text(
+                    "Restores the seeded Winter Arc programme and erases every session, " +
+                        "check-in and movement you added. Back up first.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = W.Faint,
+                )
+                Spacer(Modifier.height(14.dp))
+                GhostButton(
+                    "Erase everything and start over",
+                    { confirmReset = true },
+                    Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.DeleteOutline,
+                    color = W.Bad,
+                )
+            }
+
+            Spacer(Modifier.height(26.dp))
+            Text(
+                "Winter Arc · built for one training block, and every one after it.",
+                style = MaterialTheme.typography.labelSmall,
+                color = W.Ghost,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+
+    if (editingGoals) {
+        GoalsSheet(
+            goals = data.goals,
+            unit = data.prefs.unit,
+            onDismiss = { editingGoals = false },
+            onSave = { updated ->
+                repository.update { Actions.updateGoals(it, updated) }
+                editingGoals = false
+            },
+        )
+    }
+
+    if (addingLift) {
+        ExercisePickerSheet(
+            data = data,
+            title = "Which lift?",
+            onDismiss = { addingLift = false },
+            onPick = { exerciseId ->
+                addingLift = false
+                editingLift = LiftGoal(
+                    id = newId(),
+                    exerciseId = exerciseId,
+                    label = data.exerciseName(exerciseId),
+                    startKg = 0.0,
+                    milestoneKg = 0.0,
+                    targetKg = 0.0,
+                )
+            },
+        )
+    }
+
+    editingLift?.let { goal ->
+        LiftGoalSheet(
+            goal = goal,
+            name = data.exerciseName(goal.exerciseId),
+            unit = data.prefs.unit,
+            onDismiss = { editingLift = null },
+            onSave = { updated ->
+                repository.update { current ->
+                    val existing = current.goals.liftGoals.any { it.id == updated.id }
+                    Actions.updateGoals(
+                        current,
+                        current.goals.copy(
+                            liftGoals = if (existing) {
+                                current.goals.liftGoals.map { if (it.id == updated.id) updated else it }
+                            } else {
+                                current.goals.liftGoals + updated
+                            },
+                        ),
+                    )
+                }
+                editingLift = null
+            },
+            onDelete = {
+                repository.update { current ->
+                    Actions.updateGoals(
+                        current,
+                        current.goals.copy(
+                            liftGoals = current.goals.liftGoals.filterNot { it.id == goal.id },
+                        ),
+                    )
+                }
+                editingLift = null
+            },
+        )
+    }
+
+    if (confirmReset) {
+        WinterSheet(onDismiss = { confirmReset = false }) {
+            SheetTitle(
+                "Erase everything?",
+                "Every session, check-in and movement you added is deleted and the seeded " +
+                    "programme comes back. This cannot be undone.",
+            )
+            GhostButton(
+                "Erase everything",
+                {
+                    repository.resetToSeed()
+                    confirmReset = false
+                    onBack()
+                },
+                Modifier.fillMaxWidth(),
+                color = W.Bad,
+            )
+            Spacer(Modifier.height(9.dp))
+            GoldButton("Keep my data", { confirmReset = false }, Modifier.fillMaxWidth())
+        }
     }
 }
 
 @Composable
-private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Switch(
-            checked = checked,
-            onCheckedChange = onChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = WinterArcColors.NightDeep,
-                checkedTrackColor = WinterArcColors.Gold,
-            ),
+private fun GoalLine(
+    label: String,
+    start: Double?,
+    target: Double?,
+    suffix: String,
+    unit: WeightUnit?,
+) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = W.Muted)
+        Text(
+            if (start == null || target == null) {
+                "Not set"
+            } else {
+                val s = unit?.let { Fmt.weight(start, it) } ?: Fmt.trim(start)
+                val t = unit?.let { Fmt.weight(target, it) } ?: Fmt.trim(target)
+                "$s → $t $suffix"
+            },
+            style = MaterialTheme.typography.titleSmall,
+            color = W.Ink,
         )
     }
 }
 
 @Composable
-private fun ChoiceChip(text: String, selected: Boolean, onClick: () -> Unit) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelMedium,
-        color = if (selected) WinterArcColors.NightDeep else WinterArcColors.White,
-        modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(if (selected) WinterArcColors.Gold else WinterArcColors.NightElevated)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 9.dp),
-    )
+private fun GoalsSheet(
+    goals: Goals,
+    unit: WeightUnit,
+    onDismiss: () -> Unit,
+    onSave: (Goals) -> Unit,
+) {
+    var startWeight by remember {
+        mutableStateOf(goals.startWeightKg?.let { Fmt.weight(it, unit) } ?: "")
+    }
+    var targetWeight by remember {
+        mutableStateOf(goals.targetWeightKg?.let { Fmt.weight(it, unit) } ?: "")
+    }
+    var startFat by remember { mutableStateOf(goals.startBodyFatPct?.let { Fmt.trim(it) } ?: "") }
+    var targetFat by remember { mutableStateOf(goals.targetBodyFatPct?.let { Fmt.trim(it) } ?: "") }
+    var perWeek by remember { mutableStateOf(goals.weeklySessionTarget.toString()) }
+
+    WinterSheet(onDismiss = onDismiss) {
+        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 520.dp)) {
+            SheetTitle("Targets", "Progress is measured from the start value to the target.")
+
+            Label("Bodyweight (${unit.suffix})")
+            Spacer(Modifier.height(9.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                WinterField(startWeight, { startWeight = it }, "Start", Modifier.weight(1f), KeyboardType.Decimal)
+                WinterField(targetWeight, { targetWeight = it }, "Target", Modifier.weight(1f), KeyboardType.Decimal)
+            }
+
+            Spacer(Modifier.height(18.dp))
+            Label("Body fat (%)")
+            Spacer(Modifier.height(9.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                WinterField(startFat, { startFat = it }, "Start", Modifier.weight(1f), KeyboardType.Decimal)
+                WinterField(targetFat, { targetFat = it }, "Target", Modifier.weight(1f), KeyboardType.Decimal)
+            }
+
+            Spacer(Modifier.height(18.dp))
+            WinterField(perWeek, { perWeek = it }, "Sessions per week", keyboardType = KeyboardType.Number)
+
+            Spacer(Modifier.height(20.dp))
+            GoldButton(
+                "SAVE",
+                {
+                    onSave(
+                        goals.copy(
+                            startWeightKg = startWeight.toDoubleOrNull()
+                                ?.let { Fmt.fromDisplayWeight(it, unit) },
+                            targetWeightKg = targetWeight.toDoubleOrNull()
+                                ?.let { Fmt.fromDisplayWeight(it, unit) },
+                            startBodyFatPct = startFat.toDoubleOrNull(),
+                            targetBodyFatPct = targetFat.toDoubleOrNull(),
+                            weeklySessionTarget = perWeek.toIntOrNull()?.coerceIn(1, 14)
+                                ?: goals.weeklySessionTarget,
+                        ),
+                    )
+                },
+                Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun LiftGoalSheet(
+    goal: LiftGoal,
+    name: String,
+    unit: WeightUnit,
+    onDismiss: () -> Unit,
+    onSave: (LiftGoal) -> Unit,
+    onDelete: () -> Unit,
+) {
+    var label by remember { mutableStateOf(goal.label) }
+    var start by remember { mutableStateOf(if (goal.startKg > 0) Fmt.weight(goal.startKg, unit) else "") }
+    var milestone by remember {
+        mutableStateOf(if (goal.milestoneKg > 0) Fmt.weight(goal.milestoneKg, unit) else "")
+    }
+    var target by remember { mutableStateOf(if (goal.targetKg > 0) Fmt.weight(goal.targetKg, unit) else "") }
+
+    WinterSheet(onDismiss = onDismiss) {
+        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 520.dp)) {
+            SheetTitle("Lift goal", name)
+            WinterField(label, { label = it }, "Label")
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                WinterField(start, { start = it }, "Now", Modifier.weight(1f), KeyboardType.Decimal)
+                WinterField(milestone, { milestone = it }, "Milestone", Modifier.weight(1f), KeyboardType.Decimal)
+                WinterField(target, { target = it }, "Goal", Modifier.weight(1f), KeyboardType.Decimal)
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "The milestone is drawn as a notch on the ring — the checkpoint on the way to " +
+                    "the target.",
+                style = MaterialTheme.typography.labelSmall,
+                color = W.Ghost,
+            )
+            Spacer(Modifier.height(20.dp))
+            GoldButton(
+                "SAVE",
+                {
+                    onSave(
+                        goal.copy(
+                            label = label.trim(),
+                            startKg = start.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
+                            milestoneKg = milestone.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
+                            targetKg = target.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
+                        ),
+                    )
+                },
+                Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(9.dp))
+            GhostButton(
+                "Delete this goal",
+                onDelete,
+                Modifier.fillMaxWidth(),
+                icon = Icons.Filled.DeleteOutline,
+                color = W.Bad,
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+    }
 }

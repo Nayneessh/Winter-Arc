@@ -16,12 +16,12 @@ dependencyResolutionManagement {
 
 rootProject.name = "winter-arc"
 
-// The domain module is pure Kotlin/JVM and resolves entirely from Maven Central,
-// so it builds and tests in environments with no Android SDK. Setting
-// WINTER_ARC_DOMAIN_ONLY=1 drops the Android module from the build so that the
-// business-logic test suite can run in such an environment (see docs/BUILDING.md).
-include(":core:domain")
+// :core is pure Kotlin/JVM. It holds the whole model, every calculation and the seeded
+// programme, so all of it compiles and tests on a machine with only a JDK -- no Android SDK,
+// no emulator, no device. WINTER_ARC_CORE_ONLY=1 drops the Android module so that path stays
+// open in environments that cannot reach the Android SDK at all.
+include(":core")
 
-if (System.getenv("WINTER_ARC_DOMAIN_ONLY") != "1") {
+if (System.getenv("WINTER_ARC_CORE_ONLY") != "1") {
     include(":app")
 }

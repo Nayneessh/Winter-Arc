@@ -1,410 +1,434 @@
 package com.winterarc.app.ui.body
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.winterarc.app.AppContainer
-import com.winterarc.app.ui.components.*
-import com.winterarc.app.ui.theme.WinterArcColors
-import com.winterarc.domain.analytics.BodyAnalytics
-import com.winterarc.domain.analytics.FatMassEstimate
-import com.winterarc.domain.analytics.round1
-import com.winterarc.domain.model.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import com.winterarc.app.ui.kit.ArcCard
+import com.winterarc.app.ui.kit.AreaChart
+import com.winterarc.app.ui.kit.ChartAxis
+import com.winterarc.app.ui.kit.EmptyState
+import com.winterarc.app.ui.kit.GhostButton
+import com.winterarc.app.ui.kit.GoalRing
+import com.winterarc.app.ui.kit.GoldButton
+import com.winterarc.app.ui.kit.Label
+import com.winterarc.app.ui.kit.Metric
+import com.winterarc.app.ui.kit.Pill
+import com.winterarc.app.ui.kit.SectionHeader
+import com.winterarc.app.ui.kit.SheetTitle
+import com.winterarc.app.ui.kit.WinterField
+import com.winterarc.app.ui.kit.WinterSheet
+import com.winterarc.app.ui.theme.W
+import com.winterarc.core.Actions
+import com.winterarc.core.Analytics
+import com.winterarc.core.AppData
+import com.winterarc.core.BodyEntry
+import com.winterarc.core.Fmt
+import com.winterarc.core.MeasurementSites
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 
-private val shortDate = DateTimeFormatter.ofPattern("d MMM yyyy")
-
-data class BodyUiState(
-    val entries: List<BodyMetric> = emptyList(),
-    val deltas: List<MetricDelta> = emptyList(),
-    val fatEstimate: FatMassEstimate? = null,
-    val lengthUnit: LengthUnit = LengthUnit.IN,
-    val weightUnit: WeightUnit = WeightUnit.KG,
-    val loading: Boolean = true,
-)
-
-class BodyViewModel(private val container: AppContainer) : ViewModel() {
-    private val repo = container.repository
-    private val _state = MutableStateFlow(BodyUiState())
-    val state: StateFlow<BodyUiState> = _state.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            container.settings.settings.collect { s ->
-                _state.value = _state.value.copy(lengthUnit = s.lengthUnit, weightUnit = s.weightUnit)
-            }
-        }
-        refresh()
-    }
-
-    fun refresh() {
-        viewModelScope.launch {
-            val entries = repo.allBodyMetrics().sortedByDescending { it.date }
-            _state.value = _state.value.copy(
-                entries = entries,
-                deltas = BodyAnalytics.allDeltas(entries),
-                fatEstimate = BodyAnalytics.fatMassEstimate(entries),
-                loading = false,
-            )
-        }
-    }
-
-    fun save(metric: BodyMetric) {
-        viewModelScope.launch { repo.saveBodyMetric(metric); refresh() }
-    }
-
-    fun delete(id: String) {
-        viewModelScope.launch { repo.deleteBodyMetric(id); refresh() }
-    }
-
-    class Factory(private val container: AppContainer) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T = BodyViewModel(container) as T
-    }
-}
+private val entryDate = DateTimeFormatter.ofPattern("d MMM yyyy")
+private val axisDate = DateTimeFormatter.ofPattern("d MMM")
 
 /**
- * Body tracking.
+ * Body composition and measurements.
  *
- * The wording throughout comes from the domain layer's statement helpers rather than being
- * written inline, so the rule that a weight change is never described as fat loss is enforced
- * in one tested place instead of relied upon in each label.
+ * Weight is called weight. It is never described as fat lost or muscle gained, because a scale
+ * cannot tell the difference -- only a check-in carrying both a weight and a body-fat reading
+ * can, and those are the only ones the composition figures are computed from.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BodyScreen(
-    state: BodyUiState,
-    onSave: (BodyMetric) -> Unit,
-    onDelete: (String) -> Unit,
-    onBack: () -> Unit,
+    data: AppData,
+    onUpdate: ((AppData) -> AppData) -> Unit,
 ) {
-    var showEntry by remember { mutableStateOf(false) }
+    val stats = remember(data.body) { Analytics.bodyStats(data.body) }
+    val goals = remember(data) { Analytics.goalProgress(data) }
+        .filter { it.label == "Bodyweight" || it.label == "Body fat" }
+    val unit = data.prefs.unit
+    var editing by remember { mutableStateOf<BodyEntry?>(null) }
+    var creating by remember { mutableStateOf(false) }
 
-    Scaffold(
-        containerColor = WinterArcColors.NightDeep,
-        topBar = {
-            TopAppBar(
-                title = { Text("Body") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back", tint = WinterArcColors.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = WinterArcColors.NightDeep,
-                    titleContentColor = WinterArcColors.White,
-                ),
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showEntry = true },
-                containerColor = WinterArcColors.Gold,
-                contentColor = WinterArcColors.NightDeep,
-            ) { Icon(Icons.Default.Add, "New check-in") }
-        },
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            val weightDelta = state.deltas.firstOrNull { it.field == MetricField.WEIGHT }
-
-            WinterCard(accent = true) {
-                SectionLabel("Weight")
+    LazyColumn(
+        Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 28.dp),
+    ) {
+        item {
+            Column(Modifier.windowInsetsPadding(WindowInsets.statusBars)) {
+                Spacer(Modifier.height(14.dp))
+                Text("Body", style = MaterialTheme.typography.headlineLarge, color = W.Ink)
+                Spacer(Modifier.height(3.dp))
                 Text(
-                    BodyAnalytics.weightChangeStatement(weightDelta),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = if (weightDelta != null && weightDelta.change < 0) {
-                        WinterArcColors.Success
-                    } else {
-                        WinterArcColors.White
-                    },
+                    "${stats.entryCount} ${if (stats.entryCount == 1) "check-in" else "check-ins"} recorded",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = W.Faint,
                 )
-                if (weightDelta != null) {
-                    Text(
-                        "${weightDelta.startValue.round1()} kg on " +
-                            "${weightDelta.startDate.format(shortDate)} → " +
-                            "${weightDelta.currentValue.round1()} kg on " +
-                            weightDelta.currentDate.format(shortDate),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = WinterArcColors.Muted,
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "This is a change in scale weight. It is not a measure of fat lost or " +
-                            "muscle gained — add body-fat readings if you want an estimated split.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = WinterArcColors.Faint,
-                    )
-                }
+                Spacer(Modifier.height(18.dp))
             }
+        }
 
-            state.fatEstimate?.let { est ->
-                WinterCard {
-                    SectionLabel("Estimated composition change")
-                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                        StatTile(
-                            "Fat mass",
-                            "${est.fatMassChangeKg.round1()} kg",
-                            valueColor = if (est.fatMassChangeKg < 0) WinterArcColors.Success else WinterArcColors.White,
-                        )
-                        StatTile(
-                            "Lean mass",
-                            "${est.leanMassChangeKg.round1()} kg",
-                            valueColor = if (est.leanMassChangeKg >= 0) WinterArcColors.Success else WinterArcColors.Warning,
-                        )
-                        StatTile("Body fat", "${est.bodyFatPercentChange.round1()}%")
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        est.caveat,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = WinterArcColors.Faint,
-                    )
-                }
-            }
-
-            val measurementFields = listOf(
-                MetricField.CHEST, MetricField.WAIST, MetricField.BICEPS_LEFT,
-                MetricField.BICEPS_RIGHT, MetricField.SHOULDERS, MetricField.THIGH,
-                MetricField.CALF, MetricField.NECK, MetricField.FOREARM,
+        item {
+            GoldButton(
+                "LOG A CHECK-IN",
+                { creating = true },
+                Modifier.fillMaxWidth(),
+                icon = Icons.Filled.Add,
             )
-            val shown = state.deltas.filter { it.field in measurementFields }
-            if (shown.isNotEmpty()) {
-                SectionLabel("Measurements")
-                shown.forEach { d ->
-                    val display = { v: Double -> UnitConversion.lengthFromCm(v, state.lengthUnit).round1() }
-                    WinterCard {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Column {
-                                Text(d.field.label, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(20.dp))
+        }
+
+        if (goals.isNotEmpty()) {
+            item {
+                SectionHeader("Targets")
+                ArcCard(padding = PaddingValues(vertical = 20.dp, horizontal = 26.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+                        goals.forEachIndexed { index, goal ->
+                            GoalRing(
+                                label = goal.label,
+                                value = if (goal.unit == "%") Fmt.trim(goal.current)
+                                else Fmt.weight(goal.current, unit),
+                                unit = goal.unit,
+                                progress = goal.fraction.toFloat(),
+                                color = if (index == 0) W.Cyan else W.Warn,
+                                footnote = "→ ${Fmt.trim(goal.target)} ${goal.unit}",
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(20.dp))
+            }
+        }
+
+        item {
+            SectionHeader("Now")
+            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                    Metric(
+                        "Weight",
+                        stats.latestWeightKg?.let { Fmt.weight(it, unit) } ?: "—",
+                        unit = unit.suffix,
+                        valueColor = W.Ink,
+                        caption = stats.weightTrend?.delta?.let {
+                            "${Fmt.signed(Fmt.toDisplayWeight(it, unit), 1)} since last"
+                        },
+                    )
+                }
+                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                    Metric(
+                        "Body fat",
+                        stats.latestBodyFatPct?.let { Fmt.trim(it) } ?: "—",
+                        unit = "%",
+                        caption = stats.bodyFatTrend?.delta?.let { "${Fmt.signed(it, 1)} since last" },
+                    )
+                }
+            }
+            Spacer(Modifier.height(11.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                    Metric(
+                        "Lean mass",
+                        stats.leanMassKg?.let { Fmt.weight(it, unit) } ?: "—",
+                        unit = unit.suffix,
+                        valueColor = W.Good,
+                        caption = stats.leanMassChangeKg?.let {
+                            "${Fmt.signed(Fmt.toDisplayWeight(it, unit), 1)} overall"
+                        } ?: "needs weight + body fat",
+                    )
+                }
+                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                    Metric(
+                        "Fat mass",
+                        stats.fatMassKg?.let { Fmt.weight(it, unit) } ?: "—",
+                        unit = unit.suffix,
+                        valueColor = W.Warn,
+                        caption = stats.fatMassChangeKg?.let {
+                            "${Fmt.signed(Fmt.toDisplayWeight(it, unit), 1)} overall"
+                        } ?: "needs weight + body fat",
+                    )
+                }
+            }
+            Spacer(Modifier.height(20.dp))
+        }
+
+        if (stats.weightSeries.size >= 2) {
+            item {
+                SectionHeader("Weight")
+                ArcCard {
+                    AreaChart(
+                        values = stats.weightSeries.map { it.value },
+                        color = W.Cyan,
+                        height = 150.dp,
+                    )
+                    ChartAxis(stats.weightSeries.map { it.date.format(axisDate) })
+                }
+                Spacer(Modifier.height(20.dp))
+            }
+        }
+
+        if (stats.bodyFatSeries.size >= 2) {
+            item {
+                SectionHeader("Body fat")
+                ArcCard {
+                    AreaChart(
+                        values = stats.bodyFatSeries.map { it.value },
+                        color = W.Warn,
+                        height = 130.dp,
+                    )
+                    ChartAxis(stats.bodyFatSeries.map { it.date.format(axisDate) })
+                }
+                Spacer(Modifier.height(20.dp))
+            }
+        }
+
+        if (stats.measurementDeltas.isNotEmpty()) {
+            item {
+                SectionHeader("Measurements")
+                ArcCard {
+                    stats.measurementDeltas.forEachIndexed { index, delta ->
+                        if (index > 0) Spacer(Modifier.height(11.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
                                 Text(
-                                    BodyAnalytics.measurementChangeStatement(d, state.lengthUnit.label),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = WinterArcColors.Muted,
+                                    delta.label,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = W.Ink,
+                                )
+                                Text(
+                                    "from ${Fmt.trim(delta.firstCm)} cm",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = W.Ghost,
                                 )
                             }
                             Text(
-                                "${display(d.startValue)} → ${display(d.currentValue)} ${state.lengthUnit.label}",
+                                "${Fmt.trim(delta.latestCm)} cm",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = WinterArcColors.GoldBright,
+                                color = W.Ink,
+                            )
+                            Spacer(Modifier.width(11.dp))
+                            Pill(
+                                "${Fmt.signed(delta.deltaCm, 1)} cm",
+                                color = if (delta.deltaCm >= 0) W.Good else W.Warn,
                             )
                         }
                     }
                 }
+                Spacer(Modifier.height(20.dp))
             }
+        }
 
-            val weightSeries = state.entries
-                .filter { it.weightKg != null }
-                .sortedBy { it.date }
-                .map { ChartPoint(it.date.format(shortDate), it.weightKg!!) }
-            if (weightSeries.size >= 2) {
-                SectionLabel("Weight trend")
-                WinterCard { LineChart(weightSeries, Modifier.fillMaxWidth()) }
+        if (data.body.isEmpty()) {
+            item {
+                EmptyState(
+                    title = "No check-ins yet",
+                    message = "Log a weight, a body-fat estimate and a few tape measurements. " +
+                        "Two readings are enough to draw a trend.",
+                )
             }
-
-            SectionLabel("Check-ins")
-            if (state.entries.isEmpty()) {
-                EmptyState("No check-ins yet", "Record your first measurements to start tracking.")
-            }
-            state.entries.forEach { m ->
-                WinterCard {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
+        } else {
+            item { SectionHeader("Check-ins") }
+            val entries = data.bodyByDate.reversed()
+            items(entries.size) { index ->
+                val entry = entries[index]
+                ArcCard(
+                    Modifier.padding(bottom = 9.dp),
+                    onClick = { editing = entry },
+                    padding = PaddingValues(14.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(m.date.format(shortDate), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                buildString {
-                                    m.weightKg?.let { append("${it.round1()} kg  ") }
-                                    m.waistCm?.let {
-                                        append("waist ${UnitConversion.lengthFromCm(it, state.lengthUnit).round1()}${state.lengthUnit.label}  ")
-                                    }
-                                    m.bodyFatPercent?.let { append("${it.round1()}% bf") }
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = WinterArcColors.Muted,
+                                entry.date.format(entryDate),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = W.Muted,
                             )
-                            m.notes?.takeIf { it.isNotBlank() }?.let {
-                                Text(it, style = MaterialTheme.typography.bodySmall, color = WinterArcColors.Faint)
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                listOfNotNull(
+                                    entry.weightKg?.let { "${Fmt.weight(it, unit)} ${unit.suffix}" },
+                                    entry.bodyFatPct?.let { "${Fmt.trim(it)}% fat" },
+                                    entry.measurementsCm.size.takeIf { it > 0 }
+                                        ?.let { "$it measurements" },
+                                ).joinToString(" · ").ifBlank { "No values recorded" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = W.Ink,
+                            )
+                            if (entry.note.isNotBlank()) {
+                                Spacer(Modifier.height(3.dp))
+                                Text(
+                                    entry.note,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = W.Ghost,
+                                )
                             }
                         }
-                        TextButton(onClick = { onDelete(m.id) }) {
-                            Text("Delete", color = WinterArcColors.Danger)
-                        }
                     }
                 }
             }
-            Spacer(Modifier.height(80.dp))
         }
     }
 
-    if (showEntry) {
+    if (creating || editing != null) {
         CheckInSheet(
-            lengthUnit = state.lengthUnit,
-            onDismiss = { showEntry = false },
-            onSave = { onSave(it); showEntry = false },
+            data = data,
+            existing = editing,
+            onDismiss = { creating = false; editing = null },
+            onSave = { entry ->
+                onUpdate { Actions.saveBodyEntry(it, entry) }
+                creating = false
+                editing = null
+            },
+            onDelete = { id ->
+                onUpdate { Actions.deleteBodyEntry(it, id) }
+                creating = false
+                editing = null
+            },
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Recording a check-in.
+ *
+ * Every field is optional. A weight on its own is a perfectly good entry, and demanding a full
+ * tape measurement to log one is how a tracker stops being used by week three.
+ */
 @Composable
 private fun CheckInSheet(
-    lengthUnit: LengthUnit,
+    data: AppData,
+    existing: BodyEntry?,
     onDismiss: () -> Unit,
-    onSave: (BodyMetric) -> Unit,
+    onSave: (BodyEntry) -> Unit,
+    onDelete: (String) -> Unit,
 ) {
-    var weight by remember { mutableStateOf("") }
-    var chest by remember { mutableStateOf("") }
-    var waist by remember { mutableStateOf("") }
-    var bicepsL by remember { mutableStateOf("") }
-    var bicepsR by remember { mutableStateOf("") }
-    var shoulders by remember { mutableStateOf("") }
-    var thigh by remember { mutableStateOf("") }
-    var calf by remember { mutableStateOf("") }
-    var neck by remember { mutableStateOf("") }
-    var forearm by remember { mutableStateOf("") }
-    var bodyFat by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-
-    fun len(v: String): Double? =
-        v.toDoubleOrNull()?.let { UnitConversion.lengthToCm(it, lengthUnit) }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = WinterArcColors.NightSurface,
-        contentColor = WinterArcColors.White,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 40.dp),
-        ) {
-            Text("New check-in", style = MaterialTheme.typography.headlineSmall)
-            Text(
-                LocalDate.now().format(shortDate),
-                style = MaterialTheme.typography.bodySmall,
-                color = WinterArcColors.Muted,
-            )
-            Spacer(Modifier.height(14.dp))
-
-            NumInput("Weight (kg)", weight) { weight = it }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                NumInput("Chest (${lengthUnit.label})", chest, Modifier.weight(1f)) { chest = it }
-                NumInput("Waist (${lengthUnit.label})", waist, Modifier.weight(1f)) { waist = it }
+    val unit = data.prefs.unit
+    var weight by remember {
+        mutableStateOf(existing?.weightKg?.let { Fmt.weight(it, unit) } ?: "")
+    }
+    var fat by remember { mutableStateOf(existing?.bodyFatPct?.let { Fmt.trim(it) } ?: "") }
+    var note by remember { mutableStateOf(existing?.note ?: "") }
+    val measurements = remember {
+        mutableStateMapOf<String, String>().apply {
+            MeasurementSites.ordered.forEach { (key, _) ->
+                put(key, existing?.measurementsCm?.get(key)?.let { Fmt.trim(it) } ?: "")
             }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                NumInput("Biceps L", bicepsL, Modifier.weight(1f)) { bicepsL = it }
-                NumInput("Biceps R", bicepsR, Modifier.weight(1f)) { bicepsR = it }
-            }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                NumInput("Shoulders", shoulders, Modifier.weight(1f)) { shoulders = it }
-                NumInput("Thigh", thigh, Modifier.weight(1f)) { thigh = it }
-            }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                NumInput("Calf", calf, Modifier.weight(1f)) { calf = it }
-                NumInput("Neck", neck, Modifier.weight(1f)) { neck = it }
-            }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                NumInput("Forearm", forearm, Modifier.weight(1f)) { forearm = it }
-                NumInput("Body fat %", bodyFat, Modifier.weight(1f)) { bodyFat = it }
-            }
-            Spacer(Modifier.height(10.dp))
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("Notes") },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Leave anything blank that you did not measure. Blank is recorded as " +
-                    "not measured, never as zero.",
-                style = MaterialTheme.typography.bodySmall,
-                color = WinterArcColors.Faint,
-            )
-
-            Spacer(Modifier.height(16.dp))
-            GoldButton(
-                text = "Save check-in",
-                onClick = {
-                    onSave(
-                        BodyMetric(
-                            id = UUID.randomUUID().toString(),
-                            date = LocalDate.now(),
-                            weightKg = weight.toDoubleOrNull(),
-                            chestCm = len(chest),
-                            waistCm = len(waist),
-                            bicepsLeftCm = len(bicepsL),
-                            bicepsRightCm = len(bicepsR),
-                            shouldersCm = len(shoulders),
-                            thighCm = len(thigh),
-                            calfCm = len(calf),
-                            neckCm = len(neck),
-                            forearmCm = len(forearm),
-                            bodyFatPercent = bodyFat.toDoubleOrNull(),
-                            notes = notes.takeIf { it.isNotBlank() },
-                        ),
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
     }
-}
 
-@Composable
-private fun NumInput(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    onChange: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = { input -> onChange(input.filter { it.isDigit() || it == '.' }) },
-        label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = modifier,
-    )
+    WinterSheet(onDismiss = onDismiss) {
+        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 560.dp)) {
+            SheetTitle(
+                if (existing == null) "New check-in" else "Edit check-in",
+                existing?.date?.format(entryDate) ?: LocalDate.now().format(entryDate),
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                WinterField(
+                    value = weight,
+                    onValueChange = { weight = it },
+                    label = "Weight (${unit.suffix})",
+                    keyboardType = KeyboardType.Decimal,
+                    modifier = Modifier.weight(1f),
+                )
+                WinterField(
+                    value = fat,
+                    onValueChange = { fat = it },
+                    label = "Body fat (%)",
+                    keyboardType = KeyboardType.Decimal,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            Spacer(Modifier.height(18.dp))
+            Label("Measurements — centimetres")
+            Spacer(Modifier.height(10.dp))
+
+            MeasurementSites.ordered.chunked(2).forEach { pair ->
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 11.dp),
+                    horizontalArrangement = Arrangement.spacedBy(11.dp),
+                ) {
+                    pair.forEach { (key, label) ->
+                        WinterField(
+                            value = measurements[key].orEmpty(),
+                            onValueChange = { measurements[key] = it },
+                            label = label,
+                            keyboardType = KeyboardType.Decimal,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+
+            WinterField(
+                value = note,
+                onValueChange = { note = it },
+                label = "Note",
+                singleLine = false,
+            )
+
+            Spacer(Modifier.height(18.dp))
+            GoldButton(
+                "SAVE CHECK-IN",
+                {
+                    val entry = BodyEntry(
+                        id = existing?.id ?: com.winterarc.core.newId(),
+                        date = existing?.date ?: LocalDate.now(),
+                        weightKg = weight.toDoubleOrNull()
+                            ?.let { Fmt.fromDisplayWeight(it, unit) },
+                        bodyFatPct = fat.toDoubleOrNull(),
+                        measurementsCm = measurements
+                            .mapNotNull { (key, value) ->
+                                value.toDoubleOrNull()?.let { key to it }
+                            }
+                            .toMap(),
+                        note = note,
+                    )
+                    onSave(entry)
+                },
+                Modifier.fillMaxWidth(),
+            )
+
+            if (existing != null) {
+                Spacer(Modifier.height(10.dp))
+                GhostButton(
+                    "Delete this check-in",
+                    { onDelete(existing.id) },
+                    Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.DeleteOutline,
+                    color = W.Bad,
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+        }
+    }
 }
