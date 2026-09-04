@@ -76,7 +76,24 @@ measuring one target's own distance travelled against distance required.
 
 ---
 
-## Setup
+## Get the APK
+
+Every push builds and verifies both APKs in CI.
+
+1. Open the [Actions tab](https://github.com/Nayneessh/Winter-Arc/actions) and pick the
+   latest green run on `claude/lucid-sagan-y9pd6x`
+2. Scroll to **Artifacts**
+3. Download **`winter-arc-debug-apk`**, unzip, install the `.apk` inside
+
+Install the **debug** build first: it is not minified, so a crash gives a readable stack
+trace, and its application id is `com.winterarc.app.debug`, so it can sit alongside a release
+build without conflict.
+
+```bash
+adb install -r app-debug.apk   # or just open the file on the phone
+```
+
+## Build it yourself
 
 ```bash
 git clone https://github.com/Nayneessh/Winter-Arc.git

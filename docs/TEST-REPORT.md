@@ -7,6 +7,8 @@
 | Kotlin source | ~10,100 lines, 38 files |
 | Automated tests | 92 (80 domain + 12 mapper), all passing |
 | Supabase security advisors | 0 findings |
+| CI status | **Green** — all steps pass |
+| APKs | debug + release, built and structure-verified |
 | Verified on a physical device or emulator | **No** — see Limitations |
 
 ---
@@ -102,7 +104,19 @@ CI (`.github/workflows/android.yml`) runs on every push:
 6. **APK structure verification** — each archive is opened and checked for
    `AndroidManifest.xml` and `classes.dex`, so a green build is not mistaken for an
    installable artifact
-7. Artifact upload
+7. Artifact upload (uploads run with `if: always()`, so a debug APK that built
+   is never discarded because a later step failed)
+
+### Verified build output — run 6, commit `2d2c04e`
+
+| Artifact | Download size | Notes |
+|---|---|---|
+| `winter-arc-debug-apk` | 18.1 MB | Not minified; install this first — stack traces stay readable, and its application id is `com.winterarc.app.debug` so it can sit alongside a release build |
+| `winter-arc-release-apk` | 1.6 MB | R8 minified + resource shrunk |
+| `test-results` | 62 KB | JUnit XML and HTML reports |
+
+Both APKs were opened and confirmed to contain `AndroidManifest.xml` and
+`classes.dex` before upload.
 
 ### CI history
 | Run | Result | Cause |
@@ -111,7 +125,12 @@ CI (`.github/workflows/android.yml`) runs on every push:
 | 2 | Fail | Stack traces flooded the log; removed `--stacktrace` to make errors readable |
 | 3 | Fail | `java.util.Properties()` — in a Gradle Kotlin DSL script `java` resolves to the JavaPluginExtension, not the package |
 | 4 | Fail | Eight Kotlin errors, all one root cause: extension members cannot be fully qualified, only imported |
-| 5 | Domain + app tests pass; APK build reached | — |
+| 5 | Fail | Release only: `lintVitalRelease` rejected both backup-rule files — an `<exclude>` outside any included path is invalid. Debug APK built successfully |
+| 6 | **Pass** | All steps green; both APKs built, verified and uploaded |
+
+The run 5 failure is worth noting for anyone maintaining this: `assembleRelease`
+runs `lintVitalRelease`, which is **fatal** regardless of the separate non-blocking
+lint step. A debug build passing says nothing about whether a release build will.
 
 ---
 
