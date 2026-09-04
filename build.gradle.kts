@@ -1,16 +1,16 @@
-// Plugin versions are declared once, here, and applied by the modules that need them.
+// Intentionally empty. Plugin versions are declared per module, not here.
 //
-// The Kotlin plugin must be resolved by a single classloader across the build; declaring it with
-// an explicit version in more than one subproject loads it twice and Gradle warns that this may
-// break the build.
+// Gradle warns that the Kotlin plugin is loaded twice because :core and :app each declare it with
+// an explicit version. That warning is understood and accepted, because the alternative does not
+// work: hoisting the Kotlin plugins into a root `plugins { ... apply false }` block loads
+// kotlin-android from the root classloader, where AGP is absent, and applying it then fails with
 //
-// The Android Gradle Plugin is deliberately NOT listed here. It is served from dl.google.com,
-// which some networks block outright, and naming it in the root block would force every build to
-// resolve it -- including the core-only build that exists precisely so the business logic can be
-// compiled and tested where the Android SDK cannot be reached. It stays declared in :app alone.
-plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.0.21" apply false
-    id("org.jetbrains.kotlin.android") version "2.0.21" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21" apply false
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21" apply false
-}
+//     Could not generate a decorated class for type KotlinAndroidTarget
+//       > com/android/build/gradle/api/BaseVariant
+//
+// Fixing that means adding AGP to the root block, which forces every build to resolve it from
+// dl.google.com. That host is blocked by network policy in the environment this is developed in,
+// and doing so would break the core-only build path -- the one that lets the whole business layer
+// be compiled and tested where no Android SDK can be reached (see settings.gradle.kts).
+//
+// A warning on the CI build is a smaller price than losing local verification entirely.
