@@ -192,7 +192,7 @@ fun SettingsScreen(
             SectionLabel("Programme")
             WinterCard {
                 SettingRow("Exercise library", "${state.exerciseCount} exercises", onOpenLibrary)
-                Divider(color = WinterArcColors.NightBorder)
+                HorizontalDivider(color = WinterArcColors.NightBorder)
                 SettingRow("Workout templates", "Edit days, exercises, sets and pairings", onOpenTemplates)
             }
 

@@ -8,7 +8,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.winterarc.app.AppContainer
 import com.winterarc.app.ui.body.BodyScreen
 import com.winterarc.app.ui.body.BodyViewModel
@@ -78,7 +80,13 @@ fun WinterArcApp(container: AppContainer) {
             )
         }
 
-        composable("${Routes.WORKOUT}?template={template}&custom={custom}") { entry ->
+        composable(
+            route = "${Routes.WORKOUT}?template={template}&custom={custom}",
+            arguments = listOf(
+                navArgument("template") { type = NavType.StringType; defaultValue = "" },
+                navArgument("custom") { type = NavType.StringType; defaultValue = "false" },
+            ),
+        ) { entry ->
             val templateId = entry.arguments?.getString("template")?.takeIf { it.isNotBlank() }
             val custom = entry.arguments?.getString("custom") == "true"
 

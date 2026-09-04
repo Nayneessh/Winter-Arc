@@ -1,11 +1,14 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+// Versions are declared here rather than in a root `plugins { ... apply false }` block.
+// A root block forces Gradle to RESOLVE the Android Gradle Plugin even for builds that never
+// apply it, which would break the domain-only build path (see settings.gradle.kts).
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("com.google.devtools.ksp")
+    id("com.android.application") version "8.7.3"
+    id("org.jetbrains.kotlin.android") version "2.0.21"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
 }
 
 android {
@@ -74,10 +77,6 @@ android {
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/versions/9/previous-compilation-data.bin")
     }
-
-    sourceSets["main"].kotlin.srcDir("src/main/kotlin")
-    sourceSets["test"].kotlin.srcDir("src/test/kotlin")
-    sourceSets["androidTest"].kotlin.srcDir("src/androidTest/kotlin")
 }
 
 kotlin {
