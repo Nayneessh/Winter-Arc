@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="winter_arc.db" />
+        <exclude domain="file" path="datastore/winter_arc_sync.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="winter_arc.db" />
+        <exclude domain="file" path="datastore/winter_arc_sync.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

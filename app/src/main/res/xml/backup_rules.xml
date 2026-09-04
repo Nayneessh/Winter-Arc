@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="database" path="winter_arc.db" />
+    <include domain="database" path="winter_arc.db-wal" />
+    <include domain="sharedpref" path="." />
+    <!-- Auth tokens must never leave the device in a backup. -->
+    <exclude domain="file" path="datastore/winter_arc_sync.preferences_pb" />
+</full-backup-content>
