@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.winterarc.app.Repository
 import com.winterarc.app.ui.kit.ArcCard
 import com.winterarc.app.ui.kit.GhostButton
+import com.winterarc.app.ui.kit.FormSheet
 import com.winterarc.app.ui.kit.GoldButton
 import com.winterarc.app.ui.kit.HairLine
 import com.winterarc.app.ui.kit.Label
@@ -492,49 +493,43 @@ private fun GoalsSheet(
     var targetFat by remember { mutableStateOf(goals.targetBodyFatPct?.let { Fmt.trim(it) } ?: "") }
     var perWeek by remember { mutableStateOf(goals.weeklySessionTarget.toString()) }
 
-    WinterSheet(onDismiss = onDismiss) {
-        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 520.dp)) {
-            SheetTitle("Targets", "Progress is measured from the start value to the target.")
-
-            Label("Bodyweight (${unit.suffix})")
-            Spacer(Modifier.height(9.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                WinterField(startWeight, { startWeight = it }, "Start", Modifier.weight(1f), KeyboardType.Decimal)
-                WinterField(targetWeight, { targetWeight = it }, "Target", Modifier.weight(1f), KeyboardType.Decimal)
-            }
-
-            Spacer(Modifier.height(18.dp))
-            Label("Body fat (%)")
-            Spacer(Modifier.height(9.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                WinterField(startFat, { startFat = it }, "Start", Modifier.weight(1f), KeyboardType.Decimal)
-                WinterField(targetFat, { targetFat = it }, "Target", Modifier.weight(1f), KeyboardType.Decimal)
-            }
-
-            Spacer(Modifier.height(18.dp))
-            WinterField(perWeek, { perWeek = it }, "Sessions per week", keyboardType = KeyboardType.Number)
-
-            Spacer(Modifier.height(20.dp))
-            GoldButton(
-                "SAVE",
-                {
-                    onSave(
-                        goals.copy(
-                            startWeightKg = startWeight.toDoubleOrNull()
-                                ?.let { Fmt.fromDisplayWeight(it, unit) },
-                            targetWeightKg = targetWeight.toDoubleOrNull()
-                                ?.let { Fmt.fromDisplayWeight(it, unit) },
-                            startBodyFatPct = startFat.toDoubleOrNull(),
-                            targetBodyFatPct = targetFat.toDoubleOrNull(),
-                            weeklySessionTarget = perWeek.toIntOrNull()?.coerceIn(1, 14)
-                                ?: goals.weeklySessionTarget,
-                        ),
-                    )
-                },
-                Modifier.fillMaxWidth(),
+    FormSheet(
+        title = "Targets",
+        subtitle = "Progress is measured from the start value to the target.",
+        onDismiss = onDismiss,
+        primaryLabel = "SAVE TARGETS",
+        onPrimary = {
+            onSave(
+                goals.copy(
+                    startWeightKg = startWeight.toDoubleOrNull()
+                        ?.let { Fmt.fromDisplayWeight(it, unit) },
+                    targetWeightKg = targetWeight.toDoubleOrNull()
+                        ?.let { Fmt.fromDisplayWeight(it, unit) },
+                    startBodyFatPct = startFat.toDoubleOrNull(),
+                    targetBodyFatPct = targetFat.toDoubleOrNull(),
+                    weeklySessionTarget = perWeek.toIntOrNull()?.coerceIn(1, 14)
+                        ?: goals.weeklySessionTarget,
+                )
             )
-            Spacer(Modifier.height(8.dp))
+        },
+    ) {
+        Label("Bodyweight (${unit.suffix})")
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+            WinterField(startWeight, { startWeight = it }, "Start", Modifier.weight(1f), KeyboardType.Decimal)
+            WinterField(targetWeight, { targetWeight = it }, "Target", Modifier.weight(1f), KeyboardType.Decimal)
         }
+
+        Spacer(Modifier.height(22.dp))
+        Label("Body fat (%)")
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+            WinterField(startFat, { startFat = it }, "Start", Modifier.weight(1f), KeyboardType.Decimal)
+            WinterField(targetFat, { targetFat = it }, "Target", Modifier.weight(1f), KeyboardType.Decimal)
+        }
+
+        Spacer(Modifier.height(22.dp))
+        WinterField(perWeek, { perWeek = it }, "Sessions per week", keyboardType = KeyboardType.Number)
     }
 }
 
@@ -554,39 +549,23 @@ private fun LiftGoalSheet(
     }
     var target by remember { mutableStateOf(if (goal.targetKg > 0) Fmt.weight(goal.targetKg, unit) else "") }
 
-    WinterSheet(onDismiss = onDismiss) {
-        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 520.dp)) {
-            SheetTitle("Lift goal", name)
-            WinterField(label, { label = it }, "Label")
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                WinterField(start, { start = it }, "Now", Modifier.weight(1f), KeyboardType.Decimal)
-                WinterField(milestone, { milestone = it }, "Milestone", Modifier.weight(1f), KeyboardType.Decimal)
-                WinterField(target, { target = it }, "Goal", Modifier.weight(1f), KeyboardType.Decimal)
-            }
+    FormSheet(
+        title = "Lift goal",
+        subtitle = name,
+        onDismiss = onDismiss,
+        primaryLabel = "SAVE GOAL",
+        onPrimary = {
+            onSave(
+                goal.copy(
+                    label = label.trim(),
+                    startKg = start.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
+                    milestoneKg = milestone.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
+                    targetKg = target.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
+                )
+            )
+        },
+        footer = {
             Spacer(Modifier.height(10.dp))
-            Text(
-                "The milestone is drawn as a notch on the ring — the checkpoint on the way to " +
-                    "the target.",
-                style = MaterialTheme.typography.labelSmall,
-                color = W.Ghost,
-            )
-            Spacer(Modifier.height(20.dp))
-            GoldButton(
-                "SAVE",
-                {
-                    onSave(
-                        goal.copy(
-                            label = label.trim(),
-                            startKg = start.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
-                            milestoneKg = milestone.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
-                            targetKg = target.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) } ?: 0.0,
-                        ),
-                    )
-                },
-                Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(9.dp))
             GhostButton(
                 "Delete this goal",
                 onDelete,
@@ -594,7 +573,20 @@ private fun LiftGoalSheet(
                 icon = Icons.Filled.DeleteOutline,
                 color = W.Bad,
             )
-            Spacer(Modifier.height(8.dp))
+        },
+    ) {
+        WinterField(label, { label = it }, "Label")
+        Spacer(Modifier.height(18.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            WinterField(start, { start = it }, "Now", Modifier.weight(1f), KeyboardType.Decimal)
+            WinterField(milestone, { milestone = it }, "Milestone", Modifier.weight(1f), KeyboardType.Decimal)
+            WinterField(target, { target = it }, "Goal", Modifier.weight(1f), KeyboardType.Decimal)
         }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "The milestone is drawn as a notch on the ring — the checkpoint on the way to the target.",
+            style = MaterialTheme.typography.labelSmall,
+            color = W.Ghost,
+        )
     }
 }

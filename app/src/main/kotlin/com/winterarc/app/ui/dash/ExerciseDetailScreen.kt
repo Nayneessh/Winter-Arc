@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,7 @@ import com.winterarc.app.ui.kit.BarChart
 import com.winterarc.app.ui.kit.ChartAxis
 import com.winterarc.app.ui.kit.EmptyState
 import com.winterarc.app.ui.kit.Metric
+import com.winterarc.app.ui.kit.MetricRow
 import com.winterarc.app.ui.kit.OverlayScreen
 import com.winterarc.app.ui.kit.Pill
 import com.winterarc.app.ui.kit.SectionHeader
@@ -71,8 +73,8 @@ fun ExerciseDetailScreen(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 30.dp),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Heaviest",
                         Fmt.weight(stats.heaviestKg, unit),
@@ -80,7 +82,7 @@ fun ExerciseDetailScreen(
                         valueColor = W.GoldBright,
                     )
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Best est. 1RM",
                         Fmt.weight(stats.bestE1rmKg, unit),
@@ -89,11 +91,11 @@ fun ExerciseDetailScreen(
                 }
             }
             Spacer(Modifier.height(11.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric("Most reps", stats.bestReps.toString(), caption = "in one set")
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric("Sessions", stats.timesPerformed.toString(), caption = "times performed")
                 }
             }

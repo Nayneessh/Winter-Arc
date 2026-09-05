@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.winterarc.app.ui.kit.ArcCard
 import com.winterarc.app.ui.kit.GhostButton
+import com.winterarc.app.ui.kit.FormSheet
 import com.winterarc.app.ui.kit.GoldButton
 import com.winterarc.app.ui.kit.Label
 import com.winterarc.app.ui.kit.OverlayScreen
@@ -211,56 +212,29 @@ private fun ExerciseEditorSheet(
     var muscle by remember { mutableStateOf(existing?.muscle ?: Muscle.CHEST) }
     var equipment by remember { mutableStateOf(existing?.equipment ?: Equipment.BARBELL) }
 
-    WinterSheet(onDismiss = onDismiss) {
-        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 540.dp)) {
-            SheetTitle(
-                if (existing == null) "New movement" else "Edit movement",
-                "Anything you add here can be used in any routine or session.",
+    FormSheet(
+        title = if (existing == null) "New movement" else "Edit movement",
+        subtitle = "Anything you add here can be used in any routine or session.",
+        onDismiss = onDismiss,
+        primaryLabel = if (existing == null) "ADD MOVEMENT" else "SAVE CHANGES",
+        // Saving a movement with no name would put an unidentifiable row in the catalogue, so
+        // the action is disabled rather than silently doing nothing when pressed.
+        primaryEnabled = name.isNotBlank(),
+        onPrimary = {
+            onSave(
+                Exercise(
+                    id = existing?.id ?: newId(),
+                    name = name.trim(),
+                    muscle = muscle,
+                    detail = detail.trim(),
+                    equipment = equipment,
+                    bodyweight = equipment == Equipment.BODYWEIGHT,
+                    custom = existing?.custom ?: true,
+                    archived = existing?.archived ?: false,
+                ),
             )
-            WinterField(name, { name = it }, "Name")
-            Spacer(Modifier.height(12.dp))
-            WinterField(detail, { detail = it }, "Detail (e.g. \"Triceps long head\")")
-
-            Spacer(Modifier.height(18.dp))
-            Label("Muscle")
-            Spacer(Modifier.height(9.dp))
-            FlowChips(
-                options = Muscle.entries.map { it.display },
-                selectedIndex = Muscle.entries.indexOf(muscle),
-                onSelect = { muscle = Muscle.entries[it] },
-            )
-
-            Spacer(Modifier.height(18.dp))
-            Label("Equipment")
-            Spacer(Modifier.height(9.dp))
-            FlowChips(
-                options = Equipment.entries.map { it.display },
-                selectedIndex = Equipment.entries.indexOf(equipment),
-                onSelect = { equipment = Equipment.entries[it] },
-            )
-
-            Spacer(Modifier.height(20.dp))
-            GoldButton(
-                "SAVE",
-                {
-                    if (name.isNotBlank()) {
-                        onSave(
-                            Exercise(
-                                id = existing?.id ?: newId(),
-                                name = name.trim(),
-                                muscle = muscle,
-                                detail = detail.trim(),
-                                equipment = equipment,
-                                bodyweight = equipment == Equipment.BODYWEIGHT,
-                                custom = existing?.custom ?: true,
-                                archived = existing?.archived ?: false,
-                            ),
-                        )
-                    }
-                },
-                Modifier.fillMaxWidth(),
-            )
-
+        },
+        footer = {
             if (existing != null) {
                 Spacer(Modifier.height(10.dp))
                 GhostButton(
@@ -269,20 +243,43 @@ private fun ExerciseEditorSheet(
                     Modifier.fillMaxWidth(),
                     color = if (existing.archived) W.Good else W.Warn,
                 )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Archiving hides it from pickers. Every past performance of it is kept — " +
-                        "deleting it outright would orphan your own history.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = W.Ghost,
-                )
             }
-            Spacer(Modifier.height(10.dp))
+        },
+    ) {
+        WinterField(name, { name = it }, "Name")
+        Spacer(Modifier.height(14.dp))
+        WinterField(detail, { detail = it }, "Detail (e.g. \"Triceps long head\")")
+
+        Spacer(Modifier.height(22.dp))
+        Label("Muscle")
+        Spacer(Modifier.height(10.dp))
+        FlowChips(
+            options = Muscle.entries.map { it.display },
+            selectedIndex = Muscle.entries.indexOf(muscle),
+            onSelect = { muscle = Muscle.entries[it] },
+        )
+
+        Spacer(Modifier.height(22.dp))
+        Label("Equipment")
+        Spacer(Modifier.height(10.dp))
+        FlowChips(
+            options = Equipment.entries.map { it.display },
+            selectedIndex = Equipment.entries.indexOf(equipment),
+            onSelect = { equipment = Equipment.entries[it] },
+        )
+
+        if (existing != null) {
+            Spacer(Modifier.height(20.dp))
+            Text(
+                "Archiving hides a movement from pickers. Every past performance of it is kept — " +
+                    "deleting it outright would orphan your own history.",
+                style = MaterialTheme.typography.labelSmall,
+                color = W.Ghost,
+            )
         }
     }
 }
 
-/** A simple wrapping chip group. Rows are chunked rather than measured, which is enough here. */
 @Composable
 private fun FlowChips(options: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit) {
     options.chunked(3).forEachIndexed { rowIndex, row ->

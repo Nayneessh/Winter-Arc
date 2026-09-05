@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,6 +30,7 @@ import com.winterarc.app.ui.kit.GhostButton
 import com.winterarc.app.ui.kit.HairLine
 import com.winterarc.app.ui.kit.Label
 import com.winterarc.app.ui.kit.Metric
+import com.winterarc.app.ui.kit.MetricRow
 import com.winterarc.app.ui.kit.OverlayScreen
 import com.winterarc.app.ui.kit.Pill
 import com.winterarc.app.ui.kit.RoundIcon
@@ -82,8 +84,8 @@ fun SessionDetailScreen(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 30.dp),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(14.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(14.dp)) {
                     Metric(
                         "Volume",
                         Fmt.volume(session.volumeKg, unit),
@@ -91,10 +93,10 @@ fun SessionDetailScreen(
                         valueColor = W.GoldBright,
                     )
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(14.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(14.dp)) {
                     Metric("Sets", session.workingSetCount.toString())
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(14.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(14.dp)) {
                     Metric("Reps", session.totalReps.toString())
                 }
             }

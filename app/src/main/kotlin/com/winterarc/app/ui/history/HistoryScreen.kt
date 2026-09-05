@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,6 +31,7 @@ import com.winterarc.app.ui.kit.ArcCard
 import com.winterarc.app.ui.kit.EmptyState
 import com.winterarc.app.ui.kit.Label
 import com.winterarc.app.ui.kit.Metric
+import com.winterarc.app.ui.kit.MetricRow
 import com.winterarc.app.ui.kit.Pill
 import com.winterarc.app.ui.theme.W
 import com.winterarc.core.AppData
@@ -85,8 +87,8 @@ fun HistoryScreen(
             }
         } else {
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                    ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                MetricRow {
+                    ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                         Metric(
                             "Lifetime volume",
                             Fmt.volume(history.sumOf { it.volumeKg }, unit),
@@ -94,7 +96,7 @@ fun HistoryScreen(
                             valueColor = W.GoldBright,
                         )
                     }
-                    ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                    ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                         Metric("Total sets", history.sumOf { it.workingSetCount }.toString())
                     }
                 }

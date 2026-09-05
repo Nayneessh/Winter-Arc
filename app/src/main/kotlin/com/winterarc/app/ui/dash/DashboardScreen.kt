@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -50,6 +51,7 @@ import com.winterarc.app.ui.kit.GoalRing
 import com.winterarc.app.ui.kit.Label
 import com.winterarc.app.ui.kit.LegendRow
 import com.winterarc.app.ui.kit.Metric
+import com.winterarc.app.ui.kit.MetricRow
 import com.winterarc.app.ui.kit.SectionHeader
 import com.winterarc.app.ui.kit.SegmentedControl
 import com.winterarc.app.ui.kit.Sparkline
@@ -192,8 +194,8 @@ fun DashboardScreen(
         // -- the work done --------------------------------------------------------------------
         item {
             SectionHeader("The work · ${range.label}")
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         label = "Volume",
                         value = Fmt.volume(dash.volumeKg, unit),
@@ -205,16 +207,16 @@ fun DashboardScreen(
                         DeltaTag(dash.volumeTrend.pctChange ?: 0.0, suffix = "%", decimals = 0)
                     }
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric("Sets", dash.totalSets.toString(), caption = "working sets")
                 }
             }
             Spacer(Modifier.height(11.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric("Reps", dash.totalReps.toString(), caption = "total repetitions")
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Heaviest set",
                         Fmt.weight(dash.heaviestSetKg, unit),
@@ -222,6 +224,12 @@ fun DashboardScreen(
                     )
                 }
             }
+            Spacer(Modifier.height(22.dp))
+        }
+
+        // -- set by set ------------------------------------------------------------------------
+        item {
+            SessionBreakdownSection(data = data, onOpenExercise = onOpenExercise)
             Spacer(Modifier.height(22.dp))
         }
 
@@ -440,14 +448,14 @@ fun DashboardScreen(
 
                 if (dash.body.fatMassChangeKg != null && dash.body.leanMassChangeKg != null) {
                     Spacer(Modifier.height(18.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                    MetricRow {
                         CompositionTile(
                             "Fat mass",
                             dash.body.fatMassKg,
                             dash.body.fatMassChangeKg,
                             unit.suffix,
                             W.Warn,
-                            Modifier.weight(1f),
+                            Modifier.weight(1f).fillMaxHeight(),
                         )
                         CompositionTile(
                             "Lean mass",
@@ -455,7 +463,7 @@ fun DashboardScreen(
                             dash.body.leanMassChangeKg,
                             unit.suffix,
                             W.Good,
-                            Modifier.weight(1f),
+                            Modifier.weight(1f).fillMaxHeight(),
                         )
                     }
                     Spacer(Modifier.height(8.dp))
@@ -499,8 +507,8 @@ fun DashboardScreen(
         // -- consistency -------------------------------------------------------------------------
         item {
             SectionHeader("Consistency")
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Week streak",
                         dash.consistency.weekStreak.toString(),
@@ -508,7 +516,7 @@ fun DashboardScreen(
                         valueColor = W.GoldBright,
                     )
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Per week",
                         Fmt.trim((dash.consistency.avgSessionsPerWeek * 10).roundToInt() / 10.0),
@@ -517,11 +525,11 @@ fun DashboardScreen(
                 }
             }
             Spacer(Modifier.height(11.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric("All sessions", dash.consistency.totalSessions.toString())
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Time trained",
                         Fmt.duration(dash.consistency.totalMinutes),

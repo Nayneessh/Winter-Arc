@@ -250,6 +250,84 @@ object Seed {
         active = true,
     )
 
+
+    // -- recorded history -------------------------------------------------------------------------
+
+    private fun performed(
+        exerciseId: String,
+        group: String,
+        plannedSets: Int,
+        repLow: Int,
+        repHigh: Int,
+        priority: Priority,
+        sets: List<Pair<Double, Int>>,
+    ) = SessionExercise(
+        id = "seed-$exerciseId",
+        exerciseId = exerciseId,
+        group = group,
+        plannedSets = plannedSets,
+        repLow = repLow,
+        repHigh = repHigh,
+        priority = priority,
+        sets = sets.mapIndexed { index, (weight, reps) ->
+            SetEntry(
+                id = "seed-$exerciseId-$index",
+                weightKg = weight,
+                reps = reps,
+                done = true,
+            )
+        },
+    )
+
+    /**
+     * The Arm Day performed on 5 September 2026, exactly as it was logged.
+     *
+     * It is seeded so that a fresh install is not an empty app. It only ever appears on a first
+     * run -- once a data file exists the seed is never consulted again -- so it cannot duplicate
+     * a session that is already on the device.
+     */
+    private val firstSession = Session(
+        id = "session-2026-09-05-arms",
+        date = LocalDate.of(2026, 9, 5),
+        startedAtMillis = FIRST_SESSION_START,
+        finishedAtMillis = FIRST_SESSION_START + 121L * 60_000L,
+        routineId = "routine-arms",
+        title = "Arm Day",
+        accent = Accent.GOLD,
+        exercises = listOf(
+            performed(
+                "close-grip-bench", "A1", 4, 6, 8, Priority.ARMS,
+                listOf(40.0 to 15, 50.0 to 10, 55.0 to 8, 55.0 to 7, 40.0 to 8),
+            ),
+            performed(
+                "overhead-extension", "A2", 3, 10, 12, Priority.ARMS,
+                listOf(25.0 to 10, 20.0 to 11, 20.0 to 9, 15.0 to 10),
+            ),
+            performed(
+                "pushdown", "A3", 3, 12, 15, Priority.ARMS,
+                listOf(55.0 to 10, 50.0 to 10, 50.0 to 10),
+            ),
+            performed(
+                "standing-db-curl", "B1", 4, 8, 10, Priority.ARMS,
+                listOf(17.5 to 8, 15.0 to 8, 15.0 to 8, 15.0 to 8),
+            ),
+            performed(
+                "incline-db-curl", "B2", 3, 8, 12, Priority.ARMS,
+                listOf(12.5 to 3, 10.0 to 8, 10.0 to 8, 7.5 to 10, 7.5 to 10),
+            ),
+            performed(
+                "preacher-curl", "B3", 3, 10, 12, Priority.ARMS,
+                listOf(5.0 to 8, 5.0 to 5),
+            ),
+            performed(
+                "skull-crusher", "C1", 2, 8, 12, Priority.ARMS,
+                listOf(7.5 to 8, 7.5 to 8),
+            ),
+        ),
+    )
+
+    private const val FIRST_SESSION_START = 1_788_600_000_000L
+
     /** The rules from the workbook that govern how the programme is run. */
     val principles: List<Pair<String, String>> = listOf(
         "Recomp rule" to
@@ -291,7 +369,7 @@ object Seed {
     fun initial(today: LocalDate): AppData = AppData(
         exercises = catalogue,
         programmes = listOf(programme),
-        sessions = emptyList(),
+        sessions = listOf(firstSession),
         body = listOf(
             BodyEntry(
                 id = "body-seed",

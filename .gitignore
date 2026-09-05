@@ -10,5 +10,6 @@ captures/
 *.apk
 *.aab
 *.jks
+!winter-arc.jks
 *.keystore
 secrets.properties

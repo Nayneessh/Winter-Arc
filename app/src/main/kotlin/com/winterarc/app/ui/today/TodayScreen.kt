@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -46,6 +47,7 @@ import com.winterarc.app.ui.kit.GhostButton
 import com.winterarc.app.ui.kit.GoldButton
 import com.winterarc.app.ui.kit.Label
 import com.winterarc.app.ui.kit.Metric
+import com.winterarc.app.ui.kit.MetricRow
 import com.winterarc.app.ui.kit.ProgressRing
 import com.winterarc.app.ui.kit.RoundIcon
 import com.winterarc.app.ui.kit.SectionHeader
@@ -154,8 +156,8 @@ fun TodayScreen(
 
         Spacer(Modifier.height(20.dp))
         SectionHeader("This week")
-        Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-            ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+        MetricRow {
+            ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                 Metric(
                     label = "Streak",
                     value = consistency.weekStreak.toString(),
@@ -164,14 +166,14 @@ fun TodayScreen(
                     valueColor = W.GoldBright,
                 )
             }
-            ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                 Metric(
                     label = "Sessions",
                     value = consistency.sessionsThisWeek.toString(),
                     caption = "of ${data.goals.weeklySessionTarget} planned",
                 )
             }
-            ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                 val weekVolume = remember(data.sessions) {
                     val start = Analytics.weekStart(today)
                     data.sessions.filter { it.finished && !it.date.isBefore(start) }.sumOf { it.volumeKg }

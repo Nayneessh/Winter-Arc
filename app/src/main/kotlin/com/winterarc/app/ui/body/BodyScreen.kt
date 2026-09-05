@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -36,10 +37,12 @@ import com.winterarc.app.ui.kit.AreaChart
 import com.winterarc.app.ui.kit.ChartAxis
 import com.winterarc.app.ui.kit.EmptyState
 import com.winterarc.app.ui.kit.GhostButton
+import com.winterarc.app.ui.kit.FormSheet
 import com.winterarc.app.ui.kit.GoalRing
 import com.winterarc.app.ui.kit.GoldButton
 import com.winterarc.app.ui.kit.Label
 import com.winterarc.app.ui.kit.Metric
+import com.winterarc.app.ui.kit.MetricRow
 import com.winterarc.app.ui.kit.Pill
 import com.winterarc.app.ui.kit.SectionHeader
 import com.winterarc.app.ui.kit.SheetTitle
@@ -130,8 +133,8 @@ fun BodyScreen(
 
         item {
             SectionHeader("Now")
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Weight",
                         stats.latestWeightKg?.let { Fmt.weight(it, unit) } ?: "—",
@@ -142,7 +145,7 @@ fun BodyScreen(
                         },
                     )
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Body fat",
                         stats.latestBodyFatPct?.let { Fmt.trim(it) } ?: "—",
@@ -152,8 +155,8 @@ fun BodyScreen(
                 }
             }
             Spacer(Modifier.height(11.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Lean mass",
                         stats.leanMassKg?.let { Fmt.weight(it, unit) } ?: "—",
@@ -164,7 +167,7 @@ fun BodyScreen(
                         } ?: "needs weight + body fat",
                     )
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Fat mass",
                         stats.fatMassKg?.let { Fmt.weight(it, unit) } ?: "—",
@@ -343,81 +346,26 @@ private fun CheckInSheet(
         }
     }
 
-    WinterSheet(onDismiss = onDismiss) {
-        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 560.dp)) {
-            SheetTitle(
-                if (existing == null) "New check-in" else "Edit check-in",
-                existing?.date?.format(entryDate) ?: LocalDate.now().format(entryDate),
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                WinterField(
-                    value = weight,
-                    onValueChange = { weight = it },
-                    label = "Weight (${unit.suffix})",
-                    keyboardType = KeyboardType.Decimal,
-                    modifier = Modifier.weight(1f),
+    FormSheet(
+        title = if (existing == null) "New check-in" else "Edit check-in",
+        subtitle = existing?.date?.format(entryDate) ?: LocalDate.now().format(entryDate),
+        onDismiss = onDismiss,
+        primaryLabel = "SAVE CHECK-IN",
+        onPrimary = {
+            onSave(
+                BodyEntry(
+                    id = existing?.id ?: com.winterarc.core.newId(),
+                    date = existing?.date ?: LocalDate.now(),
+                    weightKg = weight.toDoubleOrNull()?.let { Fmt.fromDisplayWeight(it, unit) },
+                    bodyFatPct = fat.toDoubleOrNull(),
+                    measurementsCm = measurements
+                        .mapNotNull { (key, value) -> value.toDoubleOrNull()?.let { key to it } }
+                        .toMap(),
+                    note = note,
                 )
-                WinterField(
-                    value = fat,
-                    onValueChange = { fat = it },
-                    label = "Body fat (%)",
-                    keyboardType = KeyboardType.Decimal,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            Spacer(Modifier.height(18.dp))
-            Label("Measurements — centimetres")
-            Spacer(Modifier.height(10.dp))
-
-            MeasurementSites.ordered.chunked(2).forEach { pair ->
-                Row(
-                    Modifier.fillMaxWidth().padding(bottom = 11.dp),
-                    horizontalArrangement = Arrangement.spacedBy(11.dp),
-                ) {
-                    pair.forEach { (key, label) ->
-                        WinterField(
-                            value = measurements[key].orEmpty(),
-                            onValueChange = { measurements[key] = it },
-                            label = label,
-                            keyboardType = KeyboardType.Decimal,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                    if (pair.size == 1) Spacer(Modifier.weight(1f))
-                }
-            }
-
-            WinterField(
-                value = note,
-                onValueChange = { note = it },
-                label = "Note",
-                singleLine = false,
             )
-
-            Spacer(Modifier.height(18.dp))
-            GoldButton(
-                "SAVE CHECK-IN",
-                {
-                    val entry = BodyEntry(
-                        id = existing?.id ?: com.winterarc.core.newId(),
-                        date = existing?.date ?: LocalDate.now(),
-                        weightKg = weight.toDoubleOrNull()
-                            ?.let { Fmt.fromDisplayWeight(it, unit) },
-                        bodyFatPct = fat.toDoubleOrNull(),
-                        measurementsCm = measurements
-                            .mapNotNull { (key, value) ->
-                                value.toDoubleOrNull()?.let { key to it }
-                            }
-                            .toMap(),
-                        note = note,
-                    )
-                    onSave(entry)
-                },
-                Modifier.fillMaxWidth(),
-            )
-
+        },
+        footer = {
             if (existing != null) {
                 Spacer(Modifier.height(10.dp))
                 GhostButton(
@@ -428,7 +376,50 @@ private fun CheckInSheet(
                     color = W.Bad,
                 )
             }
-            Spacer(Modifier.height(10.dp))
+        },
+    ) {
+        // Every field is optional. A weight on its own is a perfectly good entry, and demanding a
+        // full tape measurement to log one is how a tracker stops being used by week three.
+        Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+            WinterField(
+                value = weight,
+                onValueChange = { weight = it },
+                label = "Weight (${unit.suffix})",
+                keyboardType = KeyboardType.Decimal,
+                modifier = Modifier.weight(1f),
+            )
+            WinterField(
+                value = fat,
+                onValueChange = { fat = it },
+                label = "Body fat (%)",
+                keyboardType = KeyboardType.Decimal,
+                modifier = Modifier.weight(1f),
+            )
         }
+
+        Spacer(Modifier.height(22.dp))
+        Label("Measurements — centimetres")
+        Spacer(Modifier.height(12.dp))
+
+        MeasurementSites.ordered.chunked(2).forEach { pair ->
+            Row(
+                Modifier.fillMaxWidth().padding(bottom = 11.dp),
+                horizontalArrangement = Arrangement.spacedBy(11.dp),
+            ) {
+                pair.forEach { (key, label) ->
+                    WinterField(
+                        value = measurements[key].orEmpty(),
+                        onValueChange = { measurements[key] = it },
+                        label = label,
+                        keyboardType = KeyboardType.Decimal,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+        WinterField(note, { note = it }, "Note", singleLine = false)
     }
 }

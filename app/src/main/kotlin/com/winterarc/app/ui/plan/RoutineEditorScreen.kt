@@ -1,6 +1,7 @@
 package com.winterarc.app.ui.plan
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,10 +37,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.winterarc.app.ui.kit.ArcCard
 import com.winterarc.app.ui.kit.EmptyState
+import com.winterarc.app.ui.kit.FormSheet
 import com.winterarc.app.ui.kit.GhostButton
 import com.winterarc.app.ui.kit.GoldButton
 import com.winterarc.app.ui.kit.Label
@@ -350,44 +353,22 @@ private fun PlanItemSheet(
     var rir by remember { mutableStateOf(item.rir) }
     var cue by remember { mutableStateOf(item.cue) }
 
-    WinterSheet(onDismiss = onDismiss) {
-        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 540.dp)) {
-            SheetTitle(name, "How this movement is prescribed")
-
-            NumberRow("Sets", sets.toString()) { sets = (sets + it).coerceIn(1, 30) }
-            NumberRow("Lowest reps", low.toString()) { low = (low + it).coerceIn(1, 100) }
-            NumberRow("Highest reps", high.toString()) { high = (high + it).coerceIn(low, 100) }
-            NumberRow("Rest", Fmt.clock(rest), step = 15) { rest = (rest + it).coerceIn(0, 900) }
-
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                WinterField(group, { group = it }, "Group (A1, B2…)", Modifier.weight(1f))
-                WinterField(rir, { rir = it }, "RIR", Modifier.weight(1f))
-            }
-            Spacer(Modifier.height(12.dp))
-            WinterField(cue, { cue = it }, "Cue", singleLine = false)
-
+    FormSheet(
+        title = name,
+        subtitle = "How this movement is prescribed",
+        onDismiss = onDismiss,
+        primaryLabel = "SAVE",
+        onPrimary = {
+            onSave(
+                item.copy(
+                    sets = sets, repLow = low, repHigh = high, restSeconds = rest,
+                    group = group.trim().ifBlank { item.group },
+                    rir = rir.trim(), cue = cue.trim(),
+                )
+            )
+        },
+        footer = {
             Spacer(Modifier.height(10.dp))
-            Text(
-                "Movements sharing a group letter are treated as a superset.",
-                style = MaterialTheme.typography.labelSmall,
-                color = W.Ghost,
-            )
-
-            Spacer(Modifier.height(18.dp))
-            GoldButton(
-                "SAVE",
-                {
-                    onSave(
-                        item.copy(
-                            sets = sets, repLow = low, repHigh = high, restSeconds = rest,
-                            group = group.trim().ifBlank { item.group }, rir = rir.trim(), cue = cue.trim(),
-                        ),
-                    )
-                },
-                Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(9.dp))
             GhostButton(
                 "Remove from routine",
                 onDelete,
@@ -395,8 +376,27 @@ private fun PlanItemSheet(
                 icon = Icons.Filled.DeleteOutline,
                 color = W.Bad,
             )
-            Spacer(Modifier.height(8.dp))
+        },
+    ) {
+        NumberRow("Sets", sets.toString()) { sets = (sets + it).coerceIn(1, 30) }
+        NumberRow("Lowest reps", low.toString()) { low = (low + it).coerceIn(1, 100) }
+        NumberRow("Highest reps", high.toString()) { high = (high + it).coerceIn(low, 100) }
+        NumberRow("Rest", Fmt.clock(rest), step = 15) { rest = (rest + it).coerceIn(0, 900) }
+
+        Spacer(Modifier.height(18.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+            WinterField(group, { group = it }, "Group (A1, B2…)", Modifier.weight(1f))
+            WinterField(rir, { rir = it }, "RIR", Modifier.weight(1f))
         }
+        Spacer(Modifier.height(14.dp))
+        WinterField(cue, { cue = it }, "Cue", singleLine = false)
+
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "Movements sharing a group letter are treated as a superset.",
+            style = MaterialTheme.typography.labelSmall,
+            color = W.Ghost,
+        )
     }
 }
 
@@ -418,83 +418,83 @@ private fun RoutineDetailsSheet(
     var daysState by remember { mutableStateOf(days) }
     var accentState by remember { mutableStateOf(accent) }
 
-    WinterSheet(onDismiss = onDismiss) {
-        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 540.dp)) {
-            SheetTitle("Routine details")
-            WinterField(nameState, { nameState = it }, "Name")
-            Spacer(Modifier.height(12.dp))
-            WinterField(subtitleState, { subtitleState = it }, "Subtitle")
-            Spacer(Modifier.height(12.dp))
-            WinterField(noteState, { noteState = it }, "Note shown before starting", singleLine = false)
-
-            Spacer(Modifier.height(16.dp))
-            NumberRow("Estimated minutes", minutesState.toString(), step = 5) {
-                minutesState = (minutesState + it).coerceIn(5, 240)
-            }
-
-            Spacer(Modifier.height(16.dp))
-            Label("Days")
-            Spacer(Modifier.height(9.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                WeekDays.forEach { day ->
-                    val on = day in daysState
-                    Text(
-                        Fmt.shortDay(day).take(1),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = if (on) W.Void else W.Muted,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(CircleShape)
-                            .background(if (on) W.Gold else W.Void.copy(alpha = 0.5f))
-                            .clickable { daysState = if (on) daysState - day else daysState + day }
-                            .padding(vertical = 12.dp),
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-            Label("Colour")
-            Spacer(Modifier.height(9.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                Accent.entries.forEach { option ->
-                    val on = option == accentState
-                    Row(
-                        Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(W.Void.copy(alpha = 0.5f))
-                            .clickable { accentState = option }
-                            .padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(
-                            Modifier
-                                .size(if (on) 15.dp else 11.dp)
-                                .clip(CircleShape)
-                                .background(W.accent(option)),
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-            GoldButton(
-                "SAVE",
-                {
-                    onSave(
-                        nameState.trim().ifBlank { name },
-                        subtitleState.trim(),
-                        noteState.trim(),
-                        minutesState,
-                        daysState,
-                        accentState,
-                    )
-                },
-                Modifier.fillMaxWidth(),
+    FormSheet(
+        title = "Routine details",
+        onDismiss = onDismiss,
+        primaryLabel = "SAVE",
+        primaryEnabled = nameState.isNotBlank(),
+        onPrimary = {
+            onSave(
+                nameState.trim().ifBlank { name },
+                subtitleState.trim(),
+                noteState.trim(),
+                minutesState,
+                daysState,
+                accentState,
             )
-            Spacer(Modifier.height(8.dp))
+        },
+    ) {
+        WinterField(nameState, { nameState = it }, "Name")
+        Spacer(Modifier.height(14.dp))
+        WinterField(subtitleState, { subtitleState = it }, "Subtitle")
+        Spacer(Modifier.height(14.dp))
+        WinterField(noteState, { noteState = it }, "Note shown before starting", singleLine = false)
+
+        Spacer(Modifier.height(20.dp))
+        NumberRow("Estimated minutes", minutesState.toString(), step = 5) {
+            minutesState = (minutesState + it).coerceIn(5, 240)
+        }
+
+        Spacer(Modifier.height(20.dp))
+        Label("Days")
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            WeekDays.forEach { day ->
+                val on = day in daysState
+                Text(
+                    Fmt.shortDay(day).take(1),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if (on) W.Void else W.Muted,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(CircleShape)
+                        .background(if (on) W.Gold else W.Void.copy(alpha = 0.5f))
+                        .clickable { daysState = if (on) daysState - day else daysState + day }
+                        .padding(vertical = 12.dp),
+                )
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+        Label("Colour")
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            Accent.entries.forEach { option ->
+                val on = option == accentState
+                Row(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(W.Void.copy(alpha = 0.5f))
+                        .border(
+                            1.dp,
+                            if (on) W.accent(option) else Color.Transparent,
+                            RoundedCornerShape(12.dp),
+                        )
+                        .clickable { accentState = option }
+                        .padding(vertical = 13.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(if (on) 15.dp else 11.dp)
+                            .clip(CircleShape)
+                            .background(W.accent(option)),
+                    )
+                }
+            }
         }
     }
 }

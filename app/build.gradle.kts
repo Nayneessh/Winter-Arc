@@ -16,8 +16,27 @@ android {
         applicationId = "com.winterarc.app"
         minSdk = 26          // java.time is available natively from 26, so no desugaring is needed
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
+    }
+
+    // One signing key, committed, used by every build type.
+    //
+    // Android refuses to install an update signed by a different key than the version already on
+    // the device. The default debug key is generated per machine, so a CI runner mints a fresh one
+    // on every clean build -- meaning each new APK could only be installed by uninstalling the
+    // previous one first, taking the whole training history with it. A fixed key makes an update
+    // simply install over the top.
+    //
+    // This app is not distributed through any store, so the key is a build input rather than a
+    // secret. It is not a Play upload key and grants nothing beyond signing a build of this app.
+    signingConfigs {
+        create("winterarc") {
+            storeFile = rootProject.file("winter-arc.jks")
+            storePassword = "winterarc"
+            keyAlias = "winterarc"
+            keyPassword = "winterarc"
+        }
     }
 
     buildTypes {
@@ -25,14 +44,13 @@ android {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            signingConfig = signingConfigs.getByName("winterarc")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Falls back to the debug key so that a release APK built anywhere is still
-            // installable. A real signing key is supplied by CI when one exists.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("winterarc")
         }
     }
 

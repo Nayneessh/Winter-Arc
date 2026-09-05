@@ -170,6 +170,60 @@ data class Dashboard(
 // Engine
 // ---------------------------------------------------------------------------------------------
 
+
+// ---------------------------------------------------------------------------------------------
+// Set-by-set breakdown
+// ---------------------------------------------------------------------------------------------
+
+/** How a set compares with the one before it, within the same movement. */
+enum class SetDirection { FIRST, UP, DOWN, HELD }
+
+data class SetPoint(
+    val index: Int,
+    val weightKg: Double,
+    val reps: Int,
+    val volumeKg: Double,
+    val direction: SetDirection,
+    /** True for the heaviest working set of the movement -- the one the session is judged on. */
+    val isTop: Boolean,
+    val warmup: Boolean,
+)
+
+data class ExerciseBreakdown(
+    val exerciseId: String,
+    val name: String,
+    val muscle: Muscle,
+    val group: String,
+    val sets: List<SetPoint>,
+    val topWeightKg: Double,
+    val volumeKg: Double,
+    val totalReps: Int,
+    val plannedSets: Int,
+    val extraSets: Int,
+    val skipped: Boolean,
+    /** Change in top-set weight against the previous time this movement was performed. */
+    val vsPreviousKg: Double?,
+) {
+    val droppedBy: Double
+        get() = sets.filterNot { it.warmup }.let { working ->
+            val first = working.maxByOrNull { it.weightKg }?.weightKg ?: 0.0
+            val last = working.lastOrNull()?.weightKg ?: 0.0
+            (first - last).coerceAtLeast(0.0)
+        }
+}
+
+data class SessionBreakdown(
+    val sessionId: String,
+    val date: LocalDate,
+    val title: String,
+    val accent: Accent,
+    val exercises: List<ExerciseBreakdown>,
+    val volumeKg: Double,
+    val setCount: Int,
+    val repCount: Int,
+    val durationMinutes: Int?,
+)
+
 /**
  * Monday-first list of weekdays.
  *
@@ -520,6 +574,96 @@ object Analytics {
         val base = raw.firstOrNull()?.second ?: return emptyList()
         if (base <= 0.0) return emptyList()
         return raw.map { SeriesPoint(it.first, it.second / base * 100.0) }
+    }
+
+    // -- set-by-set ----------------------------------------------------------------------------
+
+    /**
+     * Breaks a session down to the individual set.
+     *
+     * Direction compares each set with the one before it: heavier is UP, lighter is DOWN, and the
+     * same load is judged on reps instead, so an extra rep at the same weight still reads as
+     * progress. It answers the only question worth asking about a set in isolation -- did it go
+     * up or did it drop.
+     */
+    fun sessionBreakdown(
+        session: Session,
+        history: List<Session>,
+        catalogue: Map<String, Exercise>,
+    ): SessionBreakdown {
+        val earlier = history.filter {
+            it.finished && it.id != session.id && it.date.isBefore(session.date)
+        }
+
+        val exercises = session.exercises.map { entry ->
+            val exercise = catalogue[entry.exerciseId]
+            val working = entry.workingSets
+            val top = working.maxOfOrNull { it.weightKg } ?: 0.0
+            var topMarked = false
+
+            val points = entry.sets.filter { it.done }.mapIndexed { index, set ->
+                val previous = entry.sets.filter { it.done }.getOrNull(index - 1)
+                val direction = when {
+                    previous == null -> SetDirection.FIRST
+                    set.weightKg > previous.weightKg + 0.001 -> SetDirection.UP
+                    set.weightKg < previous.weightKg - 0.001 -> SetDirection.DOWN
+                    set.reps > previous.reps -> SetDirection.UP
+                    set.reps < previous.reps -> SetDirection.DOWN
+                    else -> SetDirection.HELD
+                }
+                // Only the first set reaching the top load is marked, so a repeated top weight
+                // does not light up twice.
+                val isTop = !set.warmup && !topMarked && top > 0.0 &&
+                    kotlin.math.abs(set.weightKg - top) < 0.001
+                if (isTop) topMarked = true
+
+                SetPoint(
+                    index = index + 1,
+                    weightKg = set.weightKg,
+                    reps = set.reps,
+                    volumeKg = set.volumeKg,
+                    direction = direction,
+                    isTop = isTop,
+                    warmup = set.warmup,
+                )
+            }
+
+            val previousTop = earlier
+                .sortedByDescending { it.date }
+                .firstNotNullOfOrNull { s ->
+                    s.exercises.firstOrNull {
+                        it.exerciseId == entry.exerciseId && it.workingSets.isNotEmpty()
+                    }
+                }
+                ?.topWeightKg
+
+            ExerciseBreakdown(
+                exerciseId = entry.exerciseId,
+                name = exercise?.name ?: "Unknown movement",
+                muscle = exercise?.muscle ?: Muscle.OTHER,
+                group = entry.group,
+                sets = points,
+                topWeightKg = top,
+                volumeKg = entry.volumeKg,
+                totalReps = entry.totalReps,
+                plannedSets = entry.plannedSets,
+                extraSets = entry.extraSets,
+                skipped = entry.skipped,
+                vsPreviousKg = previousTop?.let { top - it },
+            )
+        }
+
+        return SessionBreakdown(
+            sessionId = session.id,
+            date = session.date,
+            title = session.title,
+            accent = session.accent,
+            exercises = exercises,
+            volumeKg = session.volumeKg,
+            setCount = session.workingSetCount,
+            repCount = session.totalReps,
+            durationMinutes = session.durationMinutes,
+        )
     }
 
     // -- the whole dashboard -------------------------------------------------------------------

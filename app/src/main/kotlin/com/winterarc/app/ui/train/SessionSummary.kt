@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -36,6 +37,7 @@ import com.winterarc.app.ui.kit.ArcCard
 import com.winterarc.app.ui.kit.GoldButton
 import com.winterarc.app.ui.kit.Label
 import com.winterarc.app.ui.kit.Metric
+import com.winterarc.app.ui.kit.MetricRow
 import com.winterarc.app.ui.kit.SectionHeader
 import com.winterarc.app.ui.theme.Grad
 import com.winterarc.app.ui.theme.W
@@ -83,8 +85,8 @@ fun SessionSummary(
             )
 
             Spacer(Modifier.height(22.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+            MetricRow {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric(
                         "Volume",
                         Fmt.volume(session.volumeKg, unit),
@@ -92,10 +94,10 @@ fun SessionSummary(
                         valueColor = W.GoldBright,
                     )
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric("Sets", session.workingSetCount.toString())
                 }
-                ArcCard(Modifier.weight(1f), padding = PaddingValues(15.dp)) {
+                ArcCard(Modifier.weight(1f).fillMaxHeight(), padding = PaddingValues(15.dp)) {
                     Metric("Reps", session.totalReps.toString())
                 }
             }
