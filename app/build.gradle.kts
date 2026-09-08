@@ -16,8 +16,8 @@ android {
         applicationId = "com.winterarc.app"
         minSdk = 26          // java.time is available natively from 26, so no desugaring is needed
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
     }
 
     // One signing key, committed, used by every build type.
@@ -61,6 +61,9 @@ android {
 
     buildFeatures {
         compose = true
+        // Enabled purely so the app can show its own version. Reading it from the build rather
+        // than hardcoding a string means the number on screen cannot drift from the APK.
+        buildConfig = true
     }
 
     packaging {

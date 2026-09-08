@@ -354,7 +354,15 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(26.dp))
             Text(
-                "Winter Arc · built for one training block, and every one after it.",
+                "Winter Arc " + com.winterarc.app.BuildConfig.VERSION_NAME +
+                    " · build " + com.winterarc.app.BuildConfig.VERSION_CODE,
+                style = MaterialTheme.typography.titleSmall,
+                color = W.Muted,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Built for one training block, and every one after it.",
                 style = MaterialTheme.typography.labelSmall,
                 color = W.Ghost,
                 modifier = Modifier.fillMaxWidth(),
