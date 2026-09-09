@@ -1,0 +1,1853 @@
+{
+    "version": 1,
+    "exercises": [
+        {
+            "id": "incline-press",
+            "name": "Incline Barbell / Smith Press",
+            "muscle": "CHEST",
+            "detail": "Upper chest",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "flat-db-press",
+            "name": "Flat DB Press",
+            "muscle": "CHEST",
+            "detail": "Mid chest",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "cable-fly",
+            "name": "Cable / Machine Fly",
+            "muscle": "CHEST",
+            "detail": "Chest, lengthened",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "machine-chest-press",
+            "name": "Machine Chest Press",
+            "muscle": "CHEST",
+            "detail": "Chest",
+            "equipment": "MACHINE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "bench-press",
+            "name": "Barbell Bench Press",
+            "muscle": "CHEST",
+            "detail": "Mid chest",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "dip",
+            "name": "Dip",
+            "muscle": "CHEST",
+            "detail": "Lower chest / triceps",
+            "equipment": "BODYWEIGHT",
+            "bodyweight": true,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "pec-deck",
+            "name": "Pec Deck",
+            "muscle": "CHEST",
+            "detail": "Chest, shortened",
+            "equipment": "MACHINE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "pull-up",
+            "name": "Pull-up",
+            "muscle": "BACK",
+            "detail": "Lats — width",
+            "equipment": "BODYWEIGHT",
+            "bodyweight": true,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "chin-up",
+            "name": "Chin-up",
+            "muscle": "BACK",
+            "detail": "Lats / biceps",
+            "equipment": "BODYWEIGHT",
+            "bodyweight": true,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "t-bar-row",
+            "name": "Chest-Supported / T-Bar Row",
+            "muscle": "BACK",
+            "detail": "Mid-back — thickness",
+            "equipment": "MACHINE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "single-arm-row",
+            "name": "Single-Arm DB Row",
+            "muscle": "BACK",
+            "detail": "Lats — thickness",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "lat-pulldown",
+            "name": "Lat Pulldown",
+            "muscle": "BACK",
+            "detail": "Back width",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "seated-row",
+            "name": "Seated Cable Row",
+            "muscle": "BACK",
+            "detail": "Mid-back",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "barbell-row",
+            "name": "Barbell Row",
+            "muscle": "BACK",
+            "detail": "Mid-back",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "straight-arm-pulldown",
+            "name": "Straight-Arm Pulldown",
+            "muscle": "BACK",
+            "detail": "Lats, lengthened",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "deadlift",
+            "name": "Deadlift",
+            "muscle": "BACK",
+            "detail": "Posterior chain",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "shrug",
+            "name": "Shrug",
+            "muscle": "BACK",
+            "detail": "Traps",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "db-shoulder-press",
+            "name": "Seated DB Shoulder Press",
+            "muscle": "SHOULDERS",
+            "detail": "Delts — anterior / lateral",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "cable-lateral-raise",
+            "name": "Cable Lateral Raise",
+            "muscle": "SHOULDERS",
+            "detail": "Lateral delt",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "db-lateral-raise",
+            "name": "DB Lateral Raise",
+            "muscle": "SHOULDERS",
+            "detail": "Lateral delt",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "face-pull",
+            "name": "Face Pull",
+            "muscle": "SHOULDERS",
+            "detail": "Rear delt / rotator cuff",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "rear-delt-fly",
+            "name": "Rear Delt Fly",
+            "muscle": "SHOULDERS",
+            "detail": "Rear delt",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "overhead-press",
+            "name": "Overhead Press",
+            "muscle": "SHOULDERS",
+            "detail": "Anterior delt",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "arnold-press",
+            "name": "Arnold Press",
+            "muscle": "SHOULDERS",
+            "detail": "Delts",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "close-grip-bench",
+            "name": "Close-Grip Bench Press",
+            "muscle": "TRICEPS",
+            "detail": "Triceps — mass",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "overhead-extension",
+            "name": "Overhead Cable / DB Extension",
+            "muscle": "TRICEPS",
+            "detail": "Triceps — long head",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "pushdown",
+            "name": "Rope / V-Bar Pushdown",
+            "muscle": "TRICEPS",
+            "detail": "Triceps — lateral head",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "skull-crusher",
+            "name": "Skull Crusher",
+            "muscle": "TRICEPS",
+            "detail": "Triceps — long head",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "standing-db-curl",
+            "name": "Standing DB Curl",
+            "muscle": "BICEPS",
+            "detail": "Biceps — mass",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "incline-db-curl",
+            "name": "Incline DB Curl",
+            "muscle": "BICEPS",
+            "detail": "Biceps — long head / peak",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "preacher-curl",
+            "name": "Preacher / Spider Curl",
+            "muscle": "BICEPS",
+            "detail": "Biceps — short head",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "cable-curl",
+            "name": "Cable Curl",
+            "muscle": "BICEPS",
+            "detail": "Biceps",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "hammer-curl",
+            "name": "Hammer Curl",
+            "muscle": "BICEPS",
+            "detail": "Brachialis / forearm",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "reverse-curl",
+            "name": "Reverse Curl",
+            "muscle": "BICEPS",
+            "detail": "Brachioradialis",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "leg-press",
+            "name": "Leg Press / Hack Squat",
+            "muscle": "QUADS",
+            "detail": "Quads / glutes",
+            "equipment": "MACHINE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "back-squat",
+            "name": "Back Squat",
+            "muscle": "QUADS",
+            "detail": "Quads / glutes",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "leg-extension",
+            "name": "Leg Extension",
+            "muscle": "QUADS",
+            "detail": "Quads",
+            "equipment": "MACHINE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "bulgarian-split-squat",
+            "name": "Bulgarian Split Squat",
+            "muscle": "QUADS",
+            "detail": "Quads / glutes",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "romanian-deadlift",
+            "name": "Romanian Deadlift",
+            "muscle": "HAMSTRINGS",
+            "detail": "Hamstrings / glutes",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "leg-curl",
+            "name": "Leg Curl",
+            "muscle": "HAMSTRINGS",
+            "detail": "Hamstrings",
+            "equipment": "MACHINE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "hip-thrust",
+            "name": "Hip Thrust",
+            "muscle": "GLUTES",
+            "detail": "Glutes",
+            "equipment": "BARBELL",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "calf-raise",
+            "name": "Standing Calf Raise",
+            "muscle": "CALVES",
+            "detail": "Calves",
+            "equipment": "MACHINE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "hanging-leg-raise",
+            "name": "Hanging Leg Raise",
+            "muscle": "CORE",
+            "detail": "Lower abs",
+            "equipment": "BODYWEIGHT",
+            "bodyweight": true,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "cable-crunch",
+            "name": "Cable Crunch",
+            "muscle": "CORE",
+            "detail": "Abs",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "plank",
+            "name": "Plank",
+            "muscle": "CORE",
+            "detail": "Bracing",
+            "equipment": "BODYWEIGHT",
+            "bodyweight": true,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "mma",
+            "name": "MMA Training",
+            "muscle": "CONDITIONING",
+            "detail": "Striking / grappling",
+            "equipment": "OTHER",
+            "bodyweight": true,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "skipping",
+            "name": "Skipping",
+            "muscle": "CONDITIONING",
+            "detail": "Conditioning",
+            "equipment": "OTHER",
+            "bodyweight": true,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "run",
+            "name": "Run",
+            "muscle": "CONDITIONING",
+            "detail": "Aerobic",
+            "equipment": "OTHER",
+            "bodyweight": true,
+            "custom": false,
+            "archived": false
+        },
+        {
+            "id": "ba02860f-a588-42cd-b490-c98ffa164a3d",
+            "name": "Weighted Leg Raises",
+            "muscle": "CORE",
+            "detail": "Lower Core",
+            "equipment": "DUMBBELL",
+            "bodyweight": false,
+            "custom": true,
+            "archived": false
+        },
+        {
+            "id": "e0f892f8-39a9-4998-a3c6-cd1b54f1ee2d",
+            "name": "Basian Cable Curls",
+            "muscle": "BICEPS",
+            "detail": "Biceps Short Head",
+            "equipment": "CABLE",
+            "bodyweight": false,
+            "custom": true,
+            "archived": false
+        }
+    ],
+    "programmes": [
+        {
+            "id": "programme-winter-arc",
+            "name": "Winter Arc",
+            "startDate": "2026-09-07",
+            "endDate": "2026-12-31",
+            "routines": [
+                {
+                    "id": "routine-mon-light",
+                    "name": "MMA + Back & Rear Delt",
+                    "subtitle": "30 min light",
+                    "accent": "GREEN",
+                    "days": [
+                        "MONDAY"
+                    ],
+                    "items": [
+                        {
+                            "id": "5a6ed593-049c-489b-b4cb-70760c287bdd",
+                            "exerciseId": "lat-pulldown",
+                            "group": "A1",
+                            "sets": 3,
+                            "repLow": 10,
+                            "repHigh": 15,
+                            "rir": "2",
+                            "restSeconds": 45,
+                            "style": "Moderate",
+                            "cue": "10-15 at RIR 2 (~55-65 kg). 18-20 reps fails on grip, not lats — and grip is MMA-fatigued.",
+                            "priority": "BACK",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "9519c953-eb9b-45f3-8c9c-4b957094a418",
+                            "exerciseId": "face-pull",
+                            "group": "A2",
+                            "sets": 3,
+                            "repLow": 15,
+                            "repHigh": 20,
+                            "rir": "0-1",
+                            "restSeconds": 45,
+                            "style": "Pump",
+                            "cue": "Superset with A1. Rear delt and cuff health.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        }
+                    ],
+                    "estimatedMinutes": 30,
+                    "note": "Do this AFTER MMA, never before.",
+                    "archived": false
+                },
+                {
+                    "id": "routine-push",
+                    "name": "Heavy Push + Quads",
+                    "subtitle": "Chest · Delts · Quads",
+                    "accent": "BLUE",
+                    "days": [
+                        "TUESDAY"
+                    ],
+                    "items": [
+                        {
+                            "id": "f76827d4-1585-4768-8bf5-7e5058b40d36",
+                            "exerciseId": "incline-press",
+                            "group": "A1",
+                            "sets": 4,
+                            "repLow": 5,
+                            "repHigh": 8,
+                            "rir": "2",
+                            "restSeconds": 180,
+                            "style": "Heavy",
+                            "cue": "Upper-chest mass anchor. Heaviest press of the week.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "c8908052-df3d-4110-bfc6-cdb3e2b7068c",
+                            "exerciseId": "flat-db-press",
+                            "group": "A2",
+                            "sets": 3,
+                            "repLow": 8,
+                            "repHigh": 10,
+                            "rir": "1-2",
+                            "restSeconds": 150,
+                            "style": "Hypertrophy",
+                            "cue": "Deep stretch at the bottom. 30 kg/hand is your current max.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "8d53e137-3b50-4c35-a0c1-4846623dc216",
+                            "exerciseId": "cable-fly",
+                            "group": "B1",
+                            "sets": 3,
+                            "repLow": 12,
+                            "repHigh": 15,
+                            "rir": "1",
+                            "restSeconds": 75,
+                            "style": "Lengthened",
+                            "cue": "Stretch-position stimulus the presses miss. Superset with B2.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "1d10a1e2-7204-4412-aeda-5b37af42c613",
+                            "exerciseId": "db-shoulder-press",
+                            "group": "B2",
+                            "sets": 3,
+                            "repLow": 8,
+                            "repHigh": 10,
+                            "rir": "2",
+                            "restSeconds": 120,
+                            "style": "Hypertrophy",
+                            "cue": "Dumbbells, not barbell — Monday's MMA striking already loaded the shoulder.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "19821d7d-3a45-43b5-9d8c-6236f6d458d4",
+                            "exerciseId": "leg-press",
+                            "group": "C1",
+                            "sets": 3,
+                            "repLow": 8,
+                            "repHigh": 12,
+                            "rir": "2-3",
+                            "restSeconds": 150,
+                            "style": "Hypertrophy",
+                            "cue": "Machine-based on purpose: no spinal load 24 h before Wednesday MMA.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "0f563bf2-d9aa-42c1-a920-b1c41f680142",
+                            "exerciseId": "cable-lateral-raise",
+                            "group": "C2",
+                            "sets": 3,
+                            "repLow": 15,
+                            "repHigh": 20,
+                            "rir": "0-1",
+                            "restSeconds": 60,
+                            "style": "Pump",
+                            "cue": "Superset with C1. Width is your cheapest visual win.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        }
+                    ],
+                    "estimatedMinutes": 90,
+                    "note": "",
+                    "archived": false
+                },
+                {
+                    "id": "routine-wed-light",
+                    "name": "MMA + Arms",
+                    "subtitle": "30 min light",
+                    "accent": "GOLD",
+                    "days": [
+                        "WEDNESDAY"
+                    ],
+                    "items": [
+                        {
+                            "id": "789639d0-4e66-4258-a96d-f703d20a293b",
+                            "exerciseId": "cable-curl",
+                            "group": "A1",
+                            "sets": 3,
+                            "repLow": 12,
+                            "repHigh": 15,
+                            "rir": "1",
+                            "restSeconds": 45,
+                            "style": "Pump",
+                            "cue": "Isolation work — the metabolite stimulus IS the point here.",
+                            "priority": "ARMS",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "cafe1aa4-f40f-4dc2-b27e-9840f6986247",
+                            "exerciseId": "pushdown",
+                            "group": "A2",
+                            "sets": 3,
+                            "repLow": 12,
+                            "repHigh": 15,
+                            "rir": "0-1",
+                            "restSeconds": 45,
+                            "style": "Pump / drop",
+                            "cue": "Superset with A1. Last set is a drop set.",
+                            "priority": "ARMS",
+                            "targetWeightKg": null
+                        }
+                    ],
+                    "estimatedMinutes": 30,
+                    "note": "Do this AFTER MMA, never before. Three days clear of Saturday.",
+                    "archived": false
+                },
+                {
+                    "id": "routine-pull",
+                    "name": "Heavy Pull + Posterior",
+                    "subtitle": "Back · Rear delts · Hamstrings",
+                    "accent": "GREEN",
+                    "days": [
+                        "THURSDAY"
+                    ],
+                    "items": [
+                        {
+                            "id": "022eeebe-317f-40b0-b01a-3a7ebf14d0a2",
+                            "exerciseId": "pull-up",
+                            "group": "A1",
+                            "sets": 4,
+                            "repLow": 8,
+                            "repHigh": 12,
+                            "rir": "2",
+                            "restSeconds": 150,
+                            "style": "Heavy-ish",
+                            "cue": "Progress reps, then a 3 s eccentric. Plates only once 4x12 is clean and weight is down.",
+                            "priority": "BACK",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "9ff6e424-772b-4ace-ad21-5b705bbf7d2d",
+                            "exerciseId": "t-bar-row",
+                            "group": "A2",
+                            "sets": 4,
+                            "repLow": 8,
+                            "repHigh": 10,
+                            "rir": "1-2",
+                            "restSeconds": 150,
+                            "style": "Heavy hypertrophy",
+                            "cue": "Density driver. Chest-supported means zero lower-back cost before Friday MMA.",
+                            "priority": "BACK",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "7a145961-a626-48e2-860d-cde8895dfb4a",
+                            "exerciseId": "single-arm-row",
+                            "group": "B1",
+                            "sets": 3,
+                            "repLow": 10,
+                            "repHigh": 12,
+                            "rir": "1",
+                            "restSeconds": 90,
+                            "style": "Hypertrophy",
+                            "cue": "Full stretch at the bottom. Straps if grip is MMA-fatigued.",
+                            "priority": "BACK",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "619db4b2-fcad-4586-bd24-4444a6c3e21f",
+                            "exerciseId": "face-pull",
+                            "group": "B2",
+                            "sets": 3,
+                            "repLow": 15,
+                            "repHigh": 20,
+                            "rir": "1",
+                            "restSeconds": 45,
+                            "style": "Pump",
+                            "cue": "Superset with B1. Shoulder insurance.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "9ca6e719-0322-4540-92e3-1680736d2975",
+                            "exerciseId": "romanian-deadlift",
+                            "group": "C1",
+                            "sets": 3,
+                            "repLow": 8,
+                            "repHigh": 10,
+                            "rir": "2-3",
+                            "restSeconds": 150,
+                            "style": "Hypertrophy",
+                            "cue": "MODERATE load only — Friday MMA is 24 h away. Never grind these.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        }
+                    ],
+                    "estimatedMinutes": 90,
+                    "note": "",
+                    "archived": false
+                },
+                {
+                    "id": "routine-fri-light",
+                    "name": "MMA + Chest & Delts",
+                    "subtitle": "30 min light",
+                    "accent": "BLUE",
+                    "days": [
+                        "FRIDAY"
+                    ],
+                    "items": [
+                        {
+                            "id": "e59ededf-bc5c-4d32-a21e-ce6cf36a6ce0",
+                            "exerciseId": "machine-chest-press",
+                            "group": "A1",
+                            "sets": 3,
+                            "repLow": 10,
+                            "repHigh": 15,
+                            "rir": "2",
+                            "restSeconds": 45,
+                            "style": "Moderate",
+                            "cue": "10-15 at RIR 2 (~60-65 kg). 18-20 reps is local endurance — high joint cycles for little tension.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "4fef5cc3-1bdc-4323-a73f-493a1cbf0ddf",
+                            "exerciseId": "cable-lateral-raise",
+                            "group": "A2",
+                            "sets": 3,
+                            "repLow": 15,
+                            "repHigh": 20,
+                            "rir": "0-1",
+                            "restSeconds": 45,
+                            "style": "Pump",
+                            "cue": "Superset with A1. Stays 15-20, taken to failure.",
+                            "priority": "NONE",
+                            "targetWeightKg": null
+                        }
+                    ],
+                    "estimatedMinutes": 30,
+                    "note": "Do this AFTER MMA, never before.",
+                    "archived": false
+                },
+                {
+                    "id": "routine-arms",
+                    "name": "Arm Day",
+                    "subtitle": "Triceps · Biceps — the priority session",
+                    "accent": "GOLD",
+                    "days": [
+                        "SATURDAY"
+                    ],
+                    "items": [
+                        {
+                            "id": "c4c71387-af96-4bcf-b529-92190d9a3f10",
+                            "exerciseId": "close-grip-bench",
+                            "group": "A1",
+                            "sets": 4,
+                            "repLow": 6,
+                            "repHigh": 8,
+                            "rir": "1-2",
+                            "restSeconds": 150,
+                            "style": "Heavy",
+                            "cue": "THE arm-size lift. Triceps are two thirds of the arm. Currently 30 kg — climb it.",
+                            "priority": "ARMS",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "b26627da-e0fa-4cc2-a6ae-28919ae050bd",
+                            "exerciseId": "overhead-extension",
+                            "group": "A2",
+                            "sets": 3,
+                            "repLow": 10,
+                            "repHigh": 12,
+                            "rir": "1",
+                            "restSeconds": 90,
+                            "style": "Lengthened",
+                            "cue": "The long head only grows stretched. This builds the horseshoe.",
+                            "priority": "ARMS",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "41dc88de-82bb-471d-8ce2-fef5959d2ae4",
+                            "exerciseId": "pushdown",
+                            "group": "A3",
+                            "sets": 3,
+                            "repLow": 12,
+                            "repHigh": 15,
+                            "rir": "0-1",
+                            "restSeconds": 60,
+                            "style": "Pump / drop",
+                            "cue": "Last set is a drop set. This is your metabolite work.",
+                            "priority": "ARMS",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "e63f107b-c5bc-427d-ab7c-918b417d5d2b",
+                            "exerciseId": "standing-db-curl",
+                            "group": "B1",
+                            "sets": 4,
+                            "repLow": 8,
+                            "repHigh": 10,
+                            "rir": "1",
+                            "restSeconds": 90,
+                            "style": "Heavy hypertrophy",
+                            "cue": "Hold 17.5 kg until 10 reps across 4 sets, then move to 20 kg. No hip drive.",
+                            "priority": "ARMS",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "b81433a6-7d7d-43a6-9227-372266b163f3",
+                            "exerciseId": "incline-db-curl",
+                            "group": "B2",
+                            "sets": 3,
+                            "repLow": 8,
+                            "repHigh": 12,
+                            "rir": "1",
+                            "restSeconds": 90,
+                            "style": "Lengthened",
+                            "cue": "PEAK BUILDER. Arm behind the torso — the closest thing to a peak lift.",
+                            "priority": "ARMS",
+                            "targetWeightKg": null
+                        },
+                        {
+                            "id": "311c81ab-d2a6-4911-9cfe-14b09e698235",
+                            "exerciseId": "preacher-curl",
+                            "group": "B3",
+                            "sets": 3,
+                            "repLow": 10,
+                            "repHigh": 12,
+                            "rir": "1",
+                            "restSeconds": 75,
+                            "style": "Shortened",
+                            "cue": "Front-on arm width. Slow negative.",
+                            "priority": "ARMS",
+                            "targetWeightKg": null
+                        }
+                    ],
+                    "estimatedMinutes": 88,
+                    "note": "Trimmed to be finishable. Every movement here is priority work.",
+                    "archived": false
+                }
+            ],
+            "active": true
+        }
+    ],
+    "sessions": [
+        {
+            "id": "session-2026-09-05-arms",
+            "date": "2026-09-05",
+            "startedAtMillis": 1788600000000,
+            "finishedAtMillis": 1788607260000,
+            "routineId": "routine-arms",
+            "title": "Arm Day",
+            "accent": "GOLD",
+            "exercises": [
+                {
+                    "id": "seed-close-grip-bench",
+                    "exerciseId": "close-grip-bench",
+                    "group": "A1",
+                    "plannedSets": 4,
+                    "repLow": 6,
+                    "repHigh": 8,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "ARMS",
+                    "sets": [
+                        {
+                            "id": "seed-close-grip-bench-0",
+                            "weightKg": 40.0,
+                            "reps": 15,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-close-grip-bench-1",
+                            "weightKg": 50.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-close-grip-bench-2",
+                            "weightKg": 55.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-close-grip-bench-3",
+                            "weightKg": 55.0,
+                            "reps": 7,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-close-grip-bench-4",
+                            "weightKg": 40.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "seed-overhead-extension",
+                    "exerciseId": "overhead-extension",
+                    "group": "A2",
+                    "plannedSets": 3,
+                    "repLow": 10,
+                    "repHigh": 12,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "ARMS",
+                    "sets": [
+                        {
+                            "id": "seed-overhead-extension-0",
+                            "weightKg": 25.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-overhead-extension-1",
+                            "weightKg": 20.0,
+                            "reps": 11,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-overhead-extension-2",
+                            "weightKg": 20.0,
+                            "reps": 9,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-overhead-extension-3",
+                            "weightKg": 15.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "seed-pushdown",
+                    "exerciseId": "pushdown",
+                    "group": "A3",
+                    "plannedSets": 3,
+                    "repLow": 12,
+                    "repHigh": 15,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "ARMS",
+                    "sets": [
+                        {
+                            "id": "seed-pushdown-0",
+                            "weightKg": 55.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-pushdown-1",
+                            "weightKg": 50.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-pushdown-2",
+                            "weightKg": 50.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "seed-standing-db-curl",
+                    "exerciseId": "standing-db-curl",
+                    "group": "B1",
+                    "plannedSets": 4,
+                    "repLow": 8,
+                    "repHigh": 10,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "ARMS",
+                    "sets": [
+                        {
+                            "id": "seed-standing-db-curl-0",
+                            "weightKg": 17.5,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-standing-db-curl-1",
+                            "weightKg": 15.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-standing-db-curl-2",
+                            "weightKg": 15.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-standing-db-curl-3",
+                            "weightKg": 15.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "seed-incline-db-curl",
+                    "exerciseId": "incline-db-curl",
+                    "group": "B2",
+                    "plannedSets": 3,
+                    "repLow": 8,
+                    "repHigh": 12,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "ARMS",
+                    "sets": [
+                        {
+                            "id": "seed-incline-db-curl-0",
+                            "weightKg": 12.5,
+                            "reps": 3,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-incline-db-curl-1",
+                            "weightKg": 10.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-incline-db-curl-2",
+                            "weightKg": 10.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-incline-db-curl-3",
+                            "weightKg": 7.5,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-incline-db-curl-4",
+                            "weightKg": 7.5,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "seed-preacher-curl",
+                    "exerciseId": "preacher-curl",
+                    "group": "B3",
+                    "plannedSets": 3,
+                    "repLow": 10,
+                    "repHigh": 12,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "ARMS",
+                    "sets": [
+                        {
+                            "id": "seed-preacher-curl-0",
+                            "weightKg": 5.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-preacher-curl-1",
+                            "weightKg": 5.0,
+                            "reps": 5,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "seed-skull-crusher",
+                    "exerciseId": "skull-crusher",
+                    "group": "C1",
+                    "plannedSets": 2,
+                    "repLow": 8,
+                    "repHigh": 12,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "ARMS",
+                    "sets": [
+                        {
+                            "id": "seed-skull-crusher-0",
+                            "weightKg": 7.5,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "seed-skull-crusher-1",
+                            "weightKg": 7.5,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                }
+            ],
+            "note": "",
+            "bodyweightKg": null
+        },
+        {
+            "id": "8dd26da0-c522-4c34-bdf0-37183a7f7574",
+            "date": "2026-09-07",
+            "startedAtMillis": 1788746765150,
+            "finishedAtMillis": 1788748268997,
+            "routineId": "routine-mon-light",
+            "title": "MMA + Back & Rear Delt",
+            "accent": "GREEN",
+            "exercises": [
+                {
+                    "id": "8e4dc65b-6a40-4317-8ef5-e0285864b677",
+                    "exerciseId": "lat-pulldown",
+                    "group": "A1",
+                    "plannedSets": 3,
+                    "repLow": 10,
+                    "repHigh": 15,
+                    "rir": "2",
+                    "restSeconds": 45,
+                    "style": "Moderate",
+                    "cue": "10-15 at RIR 2 (~55-65 kg). 18-20 reps fails on grip, not lats — and grip is MMA-fatigued.",
+                    "priority": "BACK",
+                    "sets": [
+                        {
+                            "id": "a20beb05-1e2e-4cf9-809d-04d7977ded4b",
+                            "weightKg": 65.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "1b5e0fec-0078-46a8-9706-67fe8038abaa",
+                            "weightKg": 65.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "35faa9d2-2e73-43cb-9f9e-5af0ab1492b7",
+                            "weightKg": 65.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "0dd7454a-edec-4ceb-be34-1088952274c0",
+                            "weightKg": 45.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "f017390c-f960-40f3-a1c7-64b4db7afe43",
+                            "weightKg": 50.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "881e779c-f08c-429f-9ce2-2a6099321328",
+                            "weightKg": 50.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "49a0f8ee-cb2f-409a-94ff-aef0717d2ce8",
+                    "exerciseId": "face-pull",
+                    "group": "A2",
+                    "plannedSets": 3,
+                    "repLow": 15,
+                    "repHigh": 20,
+                    "rir": "0-1",
+                    "restSeconds": 45,
+                    "style": "Pump",
+                    "cue": "Superset with A1. Rear delt and cuff health.",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "38970433-cefe-41b7-a218-6cce3107189a",
+                            "weightKg": 25.0,
+                            "reps": 18,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "9b5d65ed-c5f3-4ccd-a946-758cae95e498",
+                            "weightKg": 30.0,
+                            "reps": 15,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "debcadbc-860b-4b48-b81c-84f042ceda28",
+                            "weightKg": 30.0,
+                            "reps": 15,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                }
+            ],
+            "note": "",
+            "bodyweightKg": null
+        },
+        {
+            "id": "585e7a29-832f-48f2-8734-ffc316a3e63e",
+            "date": "2026-09-08",
+            "startedAtMillis": 1788830123095,
+            "finishedAtMillis": 1788836415114,
+            "routineId": "routine-push",
+            "title": "Heavy Push + Quads",
+            "accent": "BLUE",
+            "exercises": [
+                {
+                    "id": "9aab1a47-a5e0-4148-afe3-05890d884084",
+                    "exerciseId": "incline-press",
+                    "group": "A1",
+                    "plannedSets": 4,
+                    "repLow": 5,
+                    "repHigh": 8,
+                    "rir": "2",
+                    "restSeconds": 180,
+                    "style": "Heavy",
+                    "cue": "Upper-chest mass anchor. Heaviest press of the week.",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "259dc36d-f17e-482e-847a-81f12de0edb6",
+                            "weightKg": 60.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "94743d87-1bd1-4cad-af52-8d8288a36ba4",
+                            "weightKg": 65.0,
+                            "reps": 6,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "5f09d23f-5c40-4529-a6c8-5a3d4101e9c4",
+                            "weightKg": 65.0,
+                            "reps": 5,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "b14d2138-09f0-4898-8bc2-8d12770c7cf5",
+                            "weightKg": 65.0,
+                            "reps": 5,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "040ace73-58ca-451e-9aa2-08b09992a752",
+                            "weightKg": 55.0,
+                            "reps": 6,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "9aee7e94-0f64-4d91-a3ee-a4aaeb0c2009",
+                            "weightKg": 55.0,
+                            "reps": 5,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "030ccc84-c806-4769-b401-5eb3cb899999",
+                    "exerciseId": "flat-db-press",
+                    "group": "A2",
+                    "plannedSets": 3,
+                    "repLow": 8,
+                    "repHigh": 10,
+                    "rir": "1-2",
+                    "restSeconds": 150,
+                    "style": "Hypertrophy",
+                    "cue": "Deep stretch at the bottom. 30 kg/hand is your current max.",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "1f7edfb7-e003-47a4-bc10-d0876778437b",
+                            "weightKg": 22.5,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "01a69002-6031-4968-8cb1-0ba849fe5c92",
+                            "weightKg": 22.5,
+                            "reps": 7,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "f3acb41b-c6b5-48bd-afcc-3256aa7fec60",
+                            "weightKg": 22.5,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "b973a0a1-cb82-4ffe-b0bf-7901eba10a19",
+                    "exerciseId": "cable-fly",
+                    "group": "B1",
+                    "plannedSets": 3,
+                    "repLow": 12,
+                    "repHigh": 15,
+                    "rir": "1",
+                    "restSeconds": 75,
+                    "style": "Lengthened",
+                    "cue": "Stretch-position stimulus the presses miss. Superset with B2.",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "6e266b32-e9b1-4a8f-a049-e0e8b68d71cc",
+                            "weightKg": 75.0,
+                            "reps": 7,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "fcf91a16-34ea-47e8-ba46-e9bac5460892",
+                            "weightKg": 65.0,
+                            "reps": 9,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "a1571095-9559-4a64-8c99-f33000c6de6f",
+                            "weightKg": 65.0,
+                            "reps": 7,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "e2c9c6ce-2bfa-4b18-aa04-944902f91001",
+                            "weightKg": 55.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "3736dc25-d685-41c9-a6ce-67b7ec4ace5e",
+                    "exerciseId": "db-shoulder-press",
+                    "group": "B2",
+                    "plannedSets": 3,
+                    "repLow": 8,
+                    "repHigh": 10,
+                    "rir": "2",
+                    "restSeconds": 120,
+                    "style": "Hypertrophy",
+                    "cue": "Dumbbells, not barbell — Monday's MMA striking already loaded the shoulder.",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "2df9da44-098f-42d6-a4be-51c1dcf5090e",
+                            "weightKg": 30.0,
+                            "reps": 6,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "ed38e05d-7ad4-48b7-a457-9643583ccac4",
+                            "weightKg": 50.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "e1206674-533f-43e3-a60b-c69a205da197",
+                            "weightKg": 50.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "98a2bb1b-0a73-46cf-acc8-addc26635dc9",
+                    "exerciseId": "leg-press",
+                    "group": "C1",
+                    "plannedSets": 3,
+                    "repLow": 8,
+                    "repHigh": 12,
+                    "rir": "2-3",
+                    "restSeconds": 150,
+                    "style": "Hypertrophy",
+                    "cue": "Machine-based on purpose: no spinal load 24 h before Wednesday MMA.",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "0502d0fb-3f35-4a29-9569-1e5eb148bb6f",
+                            "weightKg": 80.0,
+                            "reps": 7,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "0138496d-3148-4365-b4e8-cc7dc757140d",
+                            "weightKg": 60.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "ff81d33a-904b-4bf9-a007-4d632c4b6dd8",
+                            "weightKg": 60.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "38d93f1e-8b1e-4b8c-abf3-2e3ad9d7264b",
+                    "exerciseId": "cable-lateral-raise",
+                    "group": "C2",
+                    "plannedSets": 3,
+                    "repLow": 15,
+                    "repHigh": 20,
+                    "rir": "0-1",
+                    "restSeconds": 60,
+                    "style": "Pump",
+                    "cue": "Superset with C1. Width is your cheapest visual win.",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "03091add-9bd0-4a04-9217-48a95080cab1",
+                            "weightKg": 7.5,
+                            "reps": 15,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "920ca97f-58c7-426f-a983-ceba849097eb",
+                            "weightKg": 7.5,
+                            "reps": 15,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "f3d40c28-3c55-42c4-b8de-a637e83d2742",
+                            "weightKg": 7.5,
+                            "reps": 15,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "3019a45c-153b-4334-9711-0697b64092c1",
+                            "weightKg": 10.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "9f646219-5f91-4c5a-9493-912f7a4a41dd",
+                            "weightKg": 8.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                }
+            ],
+            "note": "",
+            "bodyweightKg": null
+        },
+        {
+            "id": "b31881dd-8e20-4895-b318-44707e9c6712",
+            "date": "2026-09-09",
+            "startedAtMillis": 1788919508160,
+            "finishedAtMillis": 1788921585881,
+            "routineId": "routine-wed-light",
+            "title": "MMA + Arms",
+            "accent": "GOLD",
+            "exercises": [
+                {
+                    "id": "b2176751-c407-4cfd-9c62-3619125ed948",
+                    "exerciseId": "pushdown",
+                    "group": "A2",
+                    "plannedSets": 3,
+                    "repLow": 12,
+                    "repHigh": 15,
+                    "rir": "0-1",
+                    "restSeconds": 45,
+                    "style": "Pump / drop",
+                    "cue": "Superset with A1. Last set is a drop set.",
+                    "priority": "ARMS",
+                    "sets": [
+                        {
+                            "id": "9d085293-4e29-4469-8318-1979dd07bc44",
+                            "weightKg": 60.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "748cc078-a098-4e58-a892-072aafd4784e",
+                            "weightKg": 65.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "47519973-8ee5-4dd1-8f15-1b9357ac7221",
+                            "weightKg": 65.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "d1e0bd22-4297-4cc6-a748-7dac3c9a492f",
+                    "exerciseId": "overhead-extension",
+                    "group": "B1",
+                    "plannedSets": 2,
+                    "repLow": 10,
+                    "repHigh": 12,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "bf3db53e-aef0-49e9-82d9-9321f30e27f5",
+                            "weightKg": 20.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "4c08b188-4cb9-4a02-a24c-4bc9a2a3e394",
+                            "weightKg": 20.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                },
+                {
+                    "id": "24f3362e-87a3-47ea-8d51-3dedcecaacb1",
+                    "exerciseId": "e0f892f8-39a9-4998-a3c6-cd1b54f1ee2d",
+                    "group": "C1",
+                    "plannedSets": 3,
+                    "repLow": 8,
+                    "repHigh": 12,
+                    "rir": "",
+                    "restSeconds": 90,
+                    "style": "",
+                    "cue": "",
+                    "priority": "NONE",
+                    "sets": [
+                        {
+                            "id": "68a2f5de-5858-44d5-bd43-e7491f053dd8",
+                            "weightKg": 15.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "d1c4248e-77a2-4352-a325-463fcb130c06",
+                            "weightKg": 15.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "1073f1b5-283d-4fa6-81fa-94cb4620afaf",
+                            "weightKg": 15.0,
+                            "reps": 10,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        },
+                        {
+                            "id": "26550fc3-fc83-4cf8-b0a9-3024a1096748",
+                            "weightKg": 10.0,
+                            "reps": 8,
+                            "done": true,
+                            "warmup": false,
+                            "rpe": null
+                        }
+                    ],
+                    "skipped": false,
+                    "note": ""
+                }
+            ],
+            "note": "",
+            "bodyweightKg": null
+        }
+    ],
+    "body": [
+        {
+            "id": "body-seed",
+            "date": "2026-09-05",
+            "weightKg": 80.0,
+            "bodyFatPct": 24.0,
+            "measurementsCm": {},
+            "note": "Starting point, from the plan."
+        }
+    ],
+    "goals": {
+        "startWeightKg": 80.0,
+        "targetWeightKg": 73.0,
+        "startBodyFatPct": 24.0,
+        "targetBodyFatPct": 15.0,
+        "weeklySessionTarget": 6,
+        "liftGoals": [
+            {
+                "id": "goal-db-curl",
+                "exerciseId": "standing-db-curl",
+                "label": "DB Curl / hand",
+                "startKg": 17.5,
+                "milestoneKg": 21.0,
+                "targetKg": 25.0
+            }
+        ]
+    },
+    "prefs": {
+        "unit": "KG",
+        "weightStepKg": 2.5,
+        "restTimerAutoStart": true,
+        "keepScreenOn": true,
+        "soundOnRestEnd": true
+    },
+    "activeSession": null
+}

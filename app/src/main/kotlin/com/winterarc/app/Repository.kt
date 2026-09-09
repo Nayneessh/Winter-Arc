@@ -25,7 +25,17 @@ import java.time.LocalDate
  * weight, reps, tick -- and rewriting the file on each keystroke would put IO in the way of the
  * one interaction that has to feel instant.
  */
-class Repository(dataFile: File) {
+class Repository(
+    dataFile: File,
+    /**
+     * The seed document shipped inside the APK, read on first run only.
+     *
+     * It is a real export in the app's own save format, so the training already recorded arrives
+     * intact rather than being transcribed into code and drifting from what actually happened.
+     * Returns null when there is none, in which case the code-built seed is used.
+     */
+    private val shippedSeed: () -> String? = { null },
+) {
 
     private val store = FileStore(dataFile)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -46,7 +56,7 @@ class Repository(dataFile: File) {
             } else {
                 // First run. The seed is written immediately so that the programme the user sees
                 // is already their own editable data, not a template consulted again later.
-                val seeded = Seed.initial(LocalDate.now())
+                val seeded = loadSeed()
                 _data.value = seeded
                 store.save(seeded)
             }
@@ -95,9 +105,30 @@ class Repository(dataFile: File) {
     }
 
     fun resetToSeed() {
-        val seeded = Seed.initial(LocalDate.now())
+        val seeded = loadSeed()
         _data.value = seeded
         store.save(seeded)
+    }
+
+    /**
+     * The state a fresh install starts from: the shipped document if it is present and readable,
+     * otherwise the programme built in code. A corrupt asset must never stop the app opening, so
+     * a failure to parse falls through rather than propagating.
+     */
+    private fun loadSeed(): AppData {
+        val text = try {
+            shippedSeed()
+        } catch (_: Exception) {
+            null
+        }
+        if (text != null) {
+            try {
+                return com.winterarc.core.DataCodec.decode(text)
+            } catch (_: Exception) {
+                // fall through to the code-built seed
+            }
+        }
+        return Seed.initial(LocalDate.now())
     }
 
     private companion object {

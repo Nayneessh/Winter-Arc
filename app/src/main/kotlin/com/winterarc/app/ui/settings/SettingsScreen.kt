@@ -337,8 +337,9 @@ fun SettingsScreen(
             SectionHeader("Reset")
             ArcCard {
                 Text(
-                    "Restores the seeded Winter Arc programme and erases every session, " +
-                        "check-in and movement you added. Back up first.",
+                    "Erases everything on this device and restores the app to the state it " +
+                        "shipped with — the programme and the training already recorded in this " +
+                        "build. Anything logged since is lost. Back up first.",
                     style = MaterialTheme.typography.bodySmall,
                     color = W.Faint,
                 )
