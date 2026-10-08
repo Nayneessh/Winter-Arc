@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.winterarc.app.Repository
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import com.winterarc.app.ui.kit.ArcCard
 import com.winterarc.app.ui.kit.GhostButton
 import com.winterarc.app.ui.kit.FormSheet
@@ -101,6 +105,23 @@ fun SettingsScreen(
             } else {
                 "That folder could not be written to. Try another."
             }
+        }
+    }
+
+    // -- cloud ---------------------------------------------------------------------------------
+    val cloud = app.cloud
+    val scope = rememberCoroutineScope()
+    var account by remember { mutableStateOf("") }
+    var secret by remember { mutableStateOf("") }
+    var connectedAs by remember { mutableStateOf(cloud.signedInAccount) }
+    var lastUpload by remember { mutableStateOf(cloud.lastUploadLabel) }
+    var busy by remember { mutableStateOf(false) }
+    var cloudBackups by remember { mutableStateOf<List<com.winterarc.app.CloudBackup>>(emptyList()) }
+    var pullingDown by remember { mutableStateOf<com.winterarc.app.CloudBackup?>(null) }
+
+    fun refreshCloudList() {
+        scope.launch {
+            cloudBackups = withContext(Dispatchers.IO) { cloud.list() }
         }
     }
 
@@ -315,6 +336,149 @@ fun SettingsScreen(
                 Modifier.fillMaxWidth(),
                 icon = Icons.Filled.Add,
             )
+
+            Spacer(Modifier.height(22.dp))
+            SectionHeader("Cloud backup")
+            ArcCard {
+                if (connectedAs == null) {
+                    Text(
+                        "A folder on this phone does not survive the phone. Connect an account " +
+                            "and every session is also stored on your own server, where a new " +
+                            "device can pull it back. Backups there are append-only — an upload " +
+                            "can add a version but can never replace one.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = W.Muted,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    WinterField(account, { account = it }, "Email", keyboardType = KeyboardType.Email)
+                    Spacer(Modifier.height(12.dp))
+                    WinterField(secret, { secret = it }, "Password", keyboardType = KeyboardType.Password)
+                    Spacer(Modifier.height(16.dp))
+                    GoldButton(
+                        if (busy) "WORKING…" else "CONNECT",
+                        {
+                            busy = true
+                            scope.launch {
+                                val result = withContext(Dispatchers.IO) { cloud.connect(account.trim(), secret) }
+                                status = result.message
+                                if (result.ok) {
+                                    connectedAs = cloud.signedInAccount
+                                    secret = ""
+                                    refreshCloudList()
+                                }
+                                busy = false
+                            }
+                        },
+                        Modifier.fillMaxWidth(),
+                        enabled = !busy && account.isNotBlank() && secret.isNotBlank(),
+                    )
+                    Spacer(Modifier.height(9.dp))
+                    GhostButton(
+                        "Create an account",
+                        {
+                            busy = true
+                            scope.launch {
+                                val result = withContext(Dispatchers.IO) { cloud.register(account.trim(), secret) }
+                                status = result.message
+                                if (result.ok) {
+                                    connectedAs = cloud.signedInAccount
+                                    secret = ""
+                                    refreshCloudList()
+                                }
+                                busy = false
+                            }
+                        },
+                        Modifier.fillMaxWidth(),
+                        enabled = !busy && account.isNotBlank() && secret.length >= 6,
+                    )
+                } else {
+                    SettingRow(
+                        title = "Connected",
+                        subtitle = connectedAs,
+                        trailing = {
+                            Text("●", style = MaterialTheme.typography.bodyLarge, color = W.Good)
+                        },
+                    )
+                    HairLine()
+                    SettingRow(
+                        title = "Last upload",
+                        subtitle = lastUpload ?: "Nothing uploaded yet",
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    GoldButton(
+                        if (busy) "WORKING…" else "BACK UP NOW",
+                        {
+                            busy = true
+                            scope.launch {
+                                val result = withContext(Dispatchers.IO) {
+                                    cloud.upload(
+                                        json = repository.exportJson(),
+                                        sessionCount = data.sessions.count { it.finished },
+                                        setCount = data.sessions.sumOf { it.workingSetCount },
+                                        volumeKg = data.sessions.sumOf { it.volumeKg },
+                                        appVersion = com.winterarc.app.BuildConfig.VERSION_NAME,
+                                        deviceLabel = android.os.Build.MODEL,
+                                    )
+                                }
+                                status = result.message
+                                lastUpload = cloud.lastUploadLabel
+                                refreshCloudList()
+                                busy = false
+                            }
+                        },
+                        Modifier.fillMaxWidth(),
+                        enabled = !busy,
+                    )
+                    Spacer(Modifier.height(9.dp))
+                    GhostButton(
+                        "Show what is stored",
+                        { refreshCloudList() },
+                        Modifier.fillMaxWidth(),
+                        enabled = !busy,
+                    )
+                    Spacer(Modifier.height(9.dp))
+                    GhostButton(
+                        "Disconnect",
+                        {
+                            cloud.disconnect()
+                            connectedAs = null
+                            lastUpload = null
+                            cloudBackups = emptyList()
+                        },
+                        Modifier.fillMaxWidth(),
+                        color = W.Warn,
+                    )
+                }
+            }
+
+            if (cloudBackups.isNotEmpty()) {
+                Spacer(Modifier.height(14.dp))
+                SectionHeader("Stored on the server")
+                ArcCard {
+                    Text(
+                        "Fullest first. Nothing here is ever overwritten, so an older, larger " +
+                            "version is always still available.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = W.Faint,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    cloudBackups.take(12).forEach { backup ->
+                        SettingRow(
+                            title = "${backup.sessionCount} sessions · ${backup.setCount} sets",
+                            subtitle = listOfNotNull(backup.createdAt, backup.deviceLabel)
+                                .joinToString(" · "),
+                            onClick = { pullingDown = backup },
+                            trailing = {
+                                Text(
+                                    "PULL",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = W.Gold,
+                                )
+                            },
+                        )
+                    }
+                }
+            }
 
             Spacer(Modifier.height(22.dp))
             SectionHeader("Safety net")
@@ -543,6 +707,42 @@ fun SettingsScreen(
                 editingLift = null
             },
         )
+    }
+
+    pullingDown?.let { backup ->
+        val current = data.sessions.count { it.finished }
+        WinterSheet(onDismiss = { pullingDown = null }) {
+            SheetTitle(
+                "Pull this version down?",
+                "It holds ${backup.sessionCount} sessions and ${backup.setCount} sets. " +
+                    "You currently have $current on this device. Everything here is replaced by " +
+                    "it — a copy of what you have now is kept automatically, and the server " +
+                    "version stays where it is either way.",
+            )
+            GoldButton(
+                if (busy) "WORKING…" else "Pull down ${backup.sessionCount} sessions",
+                {
+                    busy = true
+                    scope.launch {
+                        val json = withContext(Dispatchers.IO) { cloud.download(backup.id) }
+                        val parsed = json?.let { repository.previewImport(it) }
+                        status = if (parsed == null) {
+                            "That version could not be read."
+                        } else {
+                            repository.applyImport(parsed)
+                            snapshots = repository.snapshots()
+                            "Pulled down ${parsed.sessions.count { s -> s.finished }} sessions."
+                        }
+                        pullingDown = null
+                        busy = false
+                    }
+                },
+                Modifier.fillMaxWidth(),
+                enabled = !busy,
+            )
+            Spacer(Modifier.height(9.dp))
+            GhostButton("Cancel", { pullingDown = null }, Modifier.fillMaxWidth())
+        }
     }
 
     pendingImport?.let { incoming ->

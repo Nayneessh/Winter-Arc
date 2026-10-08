@@ -16,8 +16,8 @@ android {
         applicationId = "com.winterarc.app"
         minSdk = 26          // java.time is available natively from 26, so no desugaring is needed
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.7"
+        versionCode = 9
+        versionName = "1.8"
     }
 
     // One signing key, committed, used by every build type.

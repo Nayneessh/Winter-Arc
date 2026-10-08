@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Used for one thing: backing training up to the user's own project. The app is fully
+         functional with no connection, and nothing else ever leaves the device. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".WinterArcApplication"
         android:allowBackup="true"

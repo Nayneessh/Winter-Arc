@@ -55,7 +55,7 @@ class Repository(
      * The off-device backup hangs off this rather than off every edit: it fires when the app goes
      * to the background, which is often enough to be safe and rare enough not to thrash storage.
      */
-    var onPersisted: ((String) -> Unit)? = null
+    var onPersisted: ((AppData, String) -> Unit)? = null
 
     /**
      * Reads the save file. Synchronous, and that is the point.
@@ -120,7 +120,7 @@ class Repository(
         runBlocking(Dispatchers.IO) {
             val snapshot = _data.value
             if (store.save(snapshot)) {
-                runCatching { onPersisted?.invoke(DataCodec.encode(snapshot)) }
+                runCatching { onPersisted?.invoke(snapshot, DataCodec.encode(snapshot)) }
             }
         }
     }
