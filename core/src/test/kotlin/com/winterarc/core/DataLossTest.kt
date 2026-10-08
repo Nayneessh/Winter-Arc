@@ -119,3 +119,81 @@ class DataLossTest {
         assertTrue("and it must be recognised as needing recovery", loaded!!.isBlank)
     }
 }
+
+/**
+ * Recovering a device the bug already wiped.
+ *
+ * When the placeholder was written over the save file, the write first copied the real training
+ * into the backup. That copy is the last one in existence, and two separate mistakes were about
+ * to spend it: loading never looked at it (a blank file parses, so it was returned as the answer),
+ * and the next save would have promoted the blank file over it.
+ */
+class BackupRecoveryTest {
+
+    @get:Rule
+    val folder = TemporaryFolder()
+
+    private val real: AppData get() = Seed.initial(LocalDate.of(2026, 9, 5))
+
+    private fun wipedDeviceWithGoodBackup(): FileStore {
+        val file = File(folder.root, "winter-arc.json")
+        val backup = File(folder.root, "winter-arc.json.bak")
+        backup.writeText(DataCodec.encode(real))        // what the wiping write left behind
+        file.writeText(DataCodec.encode(AppData()))     // the blank file it produced
+        return FileStore(file)
+    }
+
+    @Test
+    fun `a blank main file is not accepted as the answer when the backup holds training`() {
+        val recovered = FileStore(File(folder.root, "winter-arc.json")).let { wipedDeviceWithGoodBackup().load() }
+        assertNotNull(recovered)
+        assertFalse("The backup must be preferred over a blank file", recovered!!.isBlank)
+        assertEquals(real.sessions.size, recovered.sessions.size)
+        assertEquals(real.exercises.size, recovered.exercises.size)
+    }
+
+    @Test
+    fun `recovery is reported before anything is touched`() {
+        assertTrue(wipedDeviceWithGoodBackup().hasRecoverableBackup())
+    }
+
+    @Test
+    fun `a healthy device reports nothing to recover`() {
+        val store = FileStore(File(folder.root, "winter-arc.json"))
+        store.save(real)
+        assertFalse(store.hasRecoverableBackup())
+    }
+
+    @Test
+    fun `saving never promotes a blank file over a backup holding training`() {
+        val store = wipedDeviceWithGoodBackup()
+        // Exactly what the previous build did on first launch: reseed, which saves.
+        store.save(Seed.initial(LocalDate.of(2026, 9, 5)))
+
+        val backup = File(folder.root, "winter-arc.json.bak")
+        assertFalse(
+            "The last copy of the training must survive the write",
+            DataCodec.decode(backup.readText()).isBlank,
+        )
+    }
+
+    @Test
+    fun `the backup still advances when the main file holds real training`() {
+        val store = FileStore(File(folder.root, "winter-arc.json"))
+        store.save(real)
+        store.save(real.copy(prefs = Prefs(unit = WeightUnit.LB)))
+
+        val backup = DataCodec.decode(File(folder.root, "winter-arc.json.bak").readText())
+        assertEquals(WeightUnit.KG, backup.prefs.unit)   // the generation before the latest
+    }
+
+    @Test
+    fun `both files blank means there is nothing to recover and seeding is correct`() {
+        val file = File(folder.root, "winter-arc.json")
+        File(folder.root, "winter-arc.json.bak").writeText(DataCodec.encode(AppData()))
+        file.writeText(DataCodec.encode(AppData()))
+        val store = FileStore(file)
+        assertFalse(store.hasRecoverableBackup())
+        assertTrue(store.load()!!.isBlank)
+    }
+}

@@ -104,10 +104,31 @@ class FileStore(private val file: File) {
     private val tempFile = File(file.parentFile, file.name + ".tmp")
     private val backupFile = File(file.parentFile, file.name + ".bak")
 
-    /** Returns null when there is nothing readable yet -- a first run, or an unrecoverable file. */
+    /**
+     * Returns the best readable state, or null when there is genuinely nothing yet.
+     *
+     * The backup used to be consulted only when the main file failed to PARSE -- which missed the
+     * case that actually cost a user their training. A file wiped by a bug is still valid JSON, so
+     * it parsed, was returned, and the real history sitting in the backup was never looked at.
+     *
+     * A blank main file is therefore treated as a reason to look further, not as an answer.
+     */
     fun load(): AppData? {
-        readParse(file)?.let { return it }
-        return readParse(backupFile)
+        val primary = readParse(file)
+        if (primary != null && !primary.isBlank) return primary
+
+        val backup = readParse(backupFile)
+        if (backup != null && !backup.isBlank) return backup
+
+        return primary ?: backup
+    }
+
+    /** True when the backup holds real training the main file does not. Recovery is possible. */
+    fun hasRecoverableBackup(): Boolean {
+        val primary = readParse(file)
+        if (primary != null && !primary.isBlank) return false
+        val backup = readParse(backupFile)
+        return backup != null && !backup.isBlank
     }
 
     private fun readParse(f: File): AppData? = try {
@@ -132,7 +153,10 @@ class FileStore(private val file: File) {
         file.parentFile?.mkdirs()
         val text = DataCodec.encode(data)
         tempFile.writeText(text)
-        if (file.exists()) {
+        // The backup is only ever replaced by something worth keeping. Promoting a blank file to
+        // backup is how the last copy of a training log gets destroyed: the main file is already
+        // ruined, and copying it over the backup spends the one remaining chance to recover.
+        if (file.exists() && readParse(file)?.isBlank == false) {
             backupFile.delete()
             file.copyTo(backupFile, overwrite = true)
         }

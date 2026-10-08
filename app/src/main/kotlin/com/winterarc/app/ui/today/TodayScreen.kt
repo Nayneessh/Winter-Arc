@@ -232,15 +232,15 @@ fun TodayScreen(
         RoutinePickerDialog(
             data = data,
             onDismiss = { showPicker = false },
-            onPick = { routineId ->
+            onPick = { routineId, date ->
                 showPicker = false
-                onUpdate { Actions.startSession(it, routineId, today, System.currentTimeMillis()) }
+                onUpdate { Actions.startSession(it, routineId, date, System.currentTimeMillis()) }
                 onTrain()
             },
-            onOpenSession = {
+            onOpenSession = { date ->
                 showPicker = false
                 onUpdate {
-                    Actions.startSession(it, null, today, System.currentTimeMillis(), "Open session")
+                    Actions.startSession(it, null, date, System.currentTimeMillis(), "Open session")
                 }
                 onTrain()
             },
