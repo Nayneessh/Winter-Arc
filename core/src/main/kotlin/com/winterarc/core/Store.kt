@@ -32,6 +32,17 @@ data class AppData(
         const val CURRENT_VERSION = 1
     }
 
+    /**
+     * True for a state that cannot have come from the user.
+     *
+     * Every legitimate state has a catalogue: a fresh install seeds one, and erasing everything
+     * restores one. A tree with no exercises, no programme, no sessions and no check-ins is
+     * therefore always a bug -- an uninitialised value that escaped before loading finished --
+     * and must never be allowed to reach the disk on top of real training.
+     */
+    val isBlank: Boolean
+        get() = exercises.isEmpty() && programmes.isEmpty() && sessions.isEmpty() && body.isEmpty()
+
     val exerciseById: Map<String, Exercise> get() = exercises.associateBy { it.id }
 
     fun exercise(id: String): Exercise? = exercises.firstOrNull { it.id == id }
@@ -105,7 +116,19 @@ class FileStore(private val file: File) {
         null
     }
 
-    fun save(data: AppData) {
+    /**
+     * Returns false when the write was refused.
+     *
+     * A blank tree is never written over a file that holds real data. This is the last line of
+     * defence rather than the first: the caller should never ask, but a save is the one operation
+     * that destroys history irreversibly, so it checks for itself instead of trusting that it was
+     * only ever called correctly.
+     */
+    fun save(data: AppData): Boolean {
+        if (data.isBlank) {
+            val existing = load()
+            if (existing != null && !existing.isBlank) return false
+        }
         file.parentFile?.mkdirs()
         val text = DataCodec.encode(data)
         tempFile.writeText(text)
@@ -119,6 +142,7 @@ class FileStore(private val file: File) {
             file.writeText(text)
             tempFile.delete()
         }
+        return true
     }
 
     fun exportJson(data: AppData): String = DataCodec.encode(data)

@@ -48,28 +48,48 @@ class Repository(
 
     private var saveJob: Job? = null
 
+    /**
+     * Reads the save file. Synchronous, and that is the point.
+     *
+     * This used to run on a background dispatcher while the rest of the app carried on against an
+     * empty placeholder state. If the activity was stopped before that read finished -- backgrounded
+     * straight after launch, or simply recreated -- onStop flushed the placeholder over the real
+     * file, and the next launch read back a perfectly valid, perfectly empty training history. It
+     * destroyed data.
+     *
+     * Reading here instead removes the window entirely: nothing can observe or persist state before
+     * it exists. It costs a few milliseconds of a cold start, before any frame is drawn, which is a
+     * trade worth making many times over to never lose a training log.
+     */
     fun load() {
-        scope.launch {
-            val existing = store.load()
-            if (existing != null) {
-                _data.value = existing
-            } else {
-                // First run. The seed is written immediately so that the programme the user sees
-                // is already their own editable data, not a template consulted again later.
-                val seeded = loadSeed()
-                _data.value = seeded
-                store.save(seeded)
-            }
-            _ready.value = true
+        val existing = store.load()
+        _data.value = when {
+            existing == null -> seedAndPersist()
+            // A stored file with nothing in it is not a user who deleted everything -- erasing
+            // restores a catalogue. It is the wiped file the race above produced, so it is treated
+            // as a first run and the shipped training is restored rather than shown as an empty app.
+            existing.isBlank -> seedAndPersist()
+            else -> existing
         }
+        _ready.value = true
+    }
+
+    private fun seedAndPersist(): AppData {
+        val seeded = loadSeed()
+        store.save(seeded)
+        return seeded
     }
 
     fun update(block: (AppData) -> AppData) {
+        // Nothing may mutate or persist before the load has happened: that is how a placeholder
+        // reached the disk in the first place.
+        if (!_ready.value) return
         _data.value = block(_data.value)
         scheduleSave()
     }
 
     private fun scheduleSave() {
+        if (!_ready.value) return
         saveJob?.cancel()
         saveJob = scope.launch {
             delay(SAVE_DEBOUNCE_MS)
@@ -81,9 +101,12 @@ class Repository(
      * Writes immediately, blocking until done.
      *
      * Called when the app goes to the background: a debounced save that has not fired yet must
-     * not be lost to the process being killed while the user is out of the app.
+     * not be lost to the process being killed while the user is out of the app. It does nothing
+     * before the load has completed, because at that point there is nothing worth writing and
+     * everything to lose.
      */
     fun flush() {
+        if (!_ready.value) return
         saveJob?.cancel()
         runBlocking(Dispatchers.IO) { store.save(_data.value) }
     }

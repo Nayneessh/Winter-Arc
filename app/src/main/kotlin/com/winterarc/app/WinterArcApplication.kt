@@ -18,6 +18,7 @@ class WinterArcApplication : Application() {
                 assets.open(SEED_ASSET).bufferedReader().use { it.readText() }
             },
         )
+        // Synchronous by design -- see Repository.load().
         repository.load()
     }
 
