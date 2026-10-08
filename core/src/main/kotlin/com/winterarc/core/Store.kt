@@ -43,6 +43,9 @@ data class AppData(
     val isBlank: Boolean
         get() = exercises.isEmpty() && programmes.isEmpty() && sessions.isEmpty() && body.isEmpty()
 
+    /** Completed training. The one number whose loss is unrecoverable and must never be silent. */
+    val finishedSessionCount: Int get() = sessions.count { it.finished }
+
     val exerciseById: Map<String, Exercise> get() = exercises.associateBy { it.id }
 
     fun exercise(id: String): Exercise? = exercises.firstOrNull { it.id == id }
@@ -150,9 +153,20 @@ class FileStore(
      * only ever called correctly.
      */
     fun save(data: AppData): Boolean {
-        if (data.isBlank) {
-            val existing = load()
-            if (existing != null && !existing.isBlank) return false
+        val existing = readParse(file)
+
+        if (data.isBlank && existing != null && !existing.isBlank) return false
+
+        // Any write that ends with less training than it started with gets the current file
+        // copied aside first.
+        //
+        // The blank guard above only catches a state that is empty in every respect. A state
+        // carrying a full exercise catalogue and no sessions at all is not blank, so it would be
+        // written -- and that is precisely the shape the next regression takes. Rather than trying
+        // to enumerate the ways a tree can be wrong, this makes losing sessions reversible however
+        // it happens: a bug, a restore of the wrong file, an import of an older backup.
+        if (existing != null && data.finishedSessionCount < existing.finishedSessionCount) {
+            writeSafetyCopy(existing)
         }
         file.parentFile?.mkdirs()
         val text = DataCodec.encode(data)
@@ -193,21 +207,58 @@ class FileStore(
         }
     }
 
-    private fun snapshotFiles(): List<File> =
+    /**
+     * Preserves the state about to be replaced, under its own name so the daily ring cannot age
+     * it out while the mistake is still unnoticed.
+     */
+    private fun writeSafetyCopy(existing: AppData) {
+        try {
+            snapshotDir.mkdirs()
+            File(snapshotDir, "before-${System.currentTimeMillis()}.json")
+                .writeText(DataCodec.encode(existing))
+            safetyFiles().drop(SAFETY_COPIES).forEach { it.delete() }
+        } catch (_: Exception) {
+            // Never fail a save for the sake of a precaution.
+        }
+    }
+
+    private fun safetyFiles(): List<File> =
         snapshotDir.listFiles()
-            ?.filter { it.isFile && it.name.endsWith(".json") }
+            ?.filter { it.isFile && it.name.startsWith("before-") }
             ?.sortedByDescending { it.name }
             .orEmpty()
 
-    /** Dated copies available to restore, newest first. */
-    fun snapshots(): List<Snapshot> = snapshotFiles().mapNotNull { f ->
-        val parsed = readParse(f) ?: return@mapNotNull null
-        Snapshot(
-            name = f.name,
-            date = f.name.removePrefix("winter-arc-").removeSuffix(".json"),
-            sessionCount = parsed.sessions.count { it.finished },
-            setCount = parsed.sessions.sumOf { it.workingSetCount },
-        )
+    private fun snapshotFiles(): List<File> =
+        snapshotDir.listFiles()
+            ?.filter { it.isFile && it.name.startsWith("winter-arc-") && it.name.endsWith(".json") }
+            ?.sortedByDescending { it.name }
+            .orEmpty()
+
+    /** Copies available to restore, newest first: the daily ring and every safety copy. */
+    fun snapshots(): List<Snapshot> {
+        val daily = snapshotFiles().mapNotNull { f ->
+            val parsed = readParse(f) ?: return@mapNotNull null
+            Snapshot(
+                name = f.name,
+                date = f.name.removePrefix("winter-arc-").removeSuffix(".json"),
+                sessionCount = parsed.finishedSessionCount,
+                setCount = parsed.sessions.sumOf { it.workingSetCount },
+                beforeChange = false,
+            )
+        }
+        val safety = safetyFiles().mapNotNull { f ->
+            val parsed = readParse(f) ?: return@mapNotNull null
+            val stamp = f.name.removePrefix("before-").removeSuffix(".json").toLongOrNull()
+            Snapshot(
+                name = f.name,
+                date = stamp?.let { java.time.Instant.ofEpochMilli(it).toString().take(16).replace('T', ' ') }
+                    ?: f.name,
+                sessionCount = parsed.finishedSessionCount,
+                setCount = parsed.sessions.sumOf { it.workingSetCount },
+                beforeChange = true,
+            )
+        }
+        return (safety + daily).sortedByDescending { it.sessionCount }
     }
 
     fun readSnapshot(name: String): AppData? = readParse(File(snapshotDir, name))
@@ -216,6 +267,7 @@ class FileStore(
 
     private companion object {
         const val SNAPSHOT_DAYS = 14
+        const val SAFETY_COPIES = 10
     }
 }
 
@@ -286,6 +338,8 @@ data class Snapshot(
     val date: String,
     val sessionCount: Int,
     val setCount: Int,
+    /** True when this was taken automatically, immediately before training was about to be lost. */
+    val beforeChange: Boolean = false,
 )
 
 /** A stable "today" seam so date-dependent logic can be tested without waiting for midnight. */

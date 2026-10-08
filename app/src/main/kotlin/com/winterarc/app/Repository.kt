@@ -142,14 +142,23 @@ class Repository(
 
     fun exportBodyCsv(): String = CsvExport.body(_data.value)
 
-    /** Replaces everything from a previously exported file. Used by Restore in settings. */
-    fun importJson(text: String): Boolean = try {
-        val parsed = com.winterarc.core.DataCodec.decode(text)
-        _data.value = parsed
-        store.save(parsed)
-        true
+    /**
+     * Decodes a backup without applying it.
+     *
+     * Restoring is the one routine action that can silently undo months of training -- an older
+     * export replaces a newer one and nothing looks wrong. So the file is read first, shown, and
+     * only applied once the difference has been seen.
+     */
+    fun previewImport(text: String): AppData? = try {
+        com.winterarc.core.DataCodec.decode(text).takeIf { !it.isBlank }
     } catch (_: Exception) {
-        false
+        null
+    }
+
+    fun applyImport(parsed: AppData) {
+        if (!_ready.value) return
+        _data.value = parsed
+        store.save(parsed)   // takes a safety copy first if this loses sessions
     }
 
     fun resetToSeed() {

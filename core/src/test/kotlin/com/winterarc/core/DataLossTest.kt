@@ -282,3 +282,125 @@ class SnapshotTest {
         assertFalse(today.readSnapshot(snapshots.single().name)!!.isBlank)
     }
 }
+
+/**
+ * Losing training is always reversible, whatever caused it.
+ *
+ * The blank guard only recognises a tree that is empty in every respect. A state carrying a full
+ * catalogue and no sessions is not blank, so it writes -- and that is the shape the next
+ * regression takes. Rather than enumerating the ways a tree can be wrong, any write that ends
+ * with less training than it started with preserves what it replaced.
+ */
+class ShrinkGuardTest {
+
+    @get:Rule
+    val folder = TemporaryFolder()
+
+    private val real: AppData get() = Seed.initial(LocalDate.of(2026, 9, 5))
+
+    private fun store() = FileStore(File(folder.root, "winter-arc.json")) { LocalDate.of(2026, 10, 8) }
+
+    @Test
+    fun `a state that keeps the catalogue but loses every session is not blank`() {
+        // Exactly what the blank guard cannot see, and why the shrink guard has to exist.
+        val gutted = real.copy(sessions = emptyList())
+        assertFalse(gutted.isBlank)
+        assertEquals(0, gutted.finishedSessionCount)
+    }
+
+    @Test
+    fun `losing sessions preserves what was replaced`() {
+        val store = store()
+        store.save(real)
+        store.save(real.copy(sessions = emptyList()))
+
+        val safety = store.snapshots().filter { it.beforeChange }
+        assertEquals(1, safety.size)
+        assertEquals(real.finishedSessionCount, safety.single().sessionCount)
+    }
+
+    @Test
+    fun `the preserved copy restores the training that was about to be lost`() {
+        val store = store()
+        store.save(real)
+        store.save(real.copy(sessions = emptyList()))
+
+        val safety = store.snapshots().first { it.beforeChange }
+        val recovered = store.readSnapshot(safety.name)!!
+        assertEquals(real.finishedSessionCount, recovered.finishedSessionCount)
+    }
+
+    @Test
+    fun `restoring an older backup over newer training is survivable`() {
+        val store = store()
+        val later = real.copy(
+            sessions = real.sessions + finishedSession(
+                LocalDate.of(2026, 10, 1),
+                listOf(sessionExercise("bench-press", listOf(set(100.0, 5)))),
+            ),
+        )
+        store.save(later)
+        store.save(real)   // an import of the older export
+
+        val safety = store.snapshots().first { it.beforeChange }
+        assertEquals(later.finishedSessionCount, safety.sessionCount)
+    }
+
+    @Test
+    fun `adding training never takes a safety copy`() {
+        val store = store()
+        store.save(real)
+        store.save(
+            real.copy(
+                sessions = real.sessions + finishedSession(
+                    LocalDate.of(2026, 10, 1),
+                    listOf(sessionExercise("bench-press", listOf(set(100.0, 5)))),
+                ),
+            ),
+        )
+        assertTrue(store.snapshots().none { it.beforeChange })
+    }
+
+    @Test
+    fun `editing without losing training never takes a safety copy`() {
+        val store = store()
+        store.save(real)
+        store.save(real.copy(prefs = Prefs(unit = WeightUnit.LB)))
+        assertTrue(store.snapshots().none { it.beforeChange })
+    }
+
+    @Test
+    fun `deleting one session is reversible too`() {
+        val store = store()
+        store.save(real)
+        store.save(real.copy(sessions = real.sessions.drop(1)))
+        assertEquals(real.finishedSessionCount, store.snapshots().first { it.beforeChange }.sessionCount)
+    }
+
+    @Test
+    fun `safety copies are capped but the richest is always offered first`() {
+        val store = store()
+        store.save(real)
+        repeat(15) { store.save(real.copy(sessions = emptyList())) }
+
+        val safety = store.snapshots().filter { it.beforeChange }
+        assertTrue("capped", safety.size <= 10)
+        assertEquals(real.finishedSessionCount, store.snapshots().first().sessionCount)
+    }
+
+    @Test
+    fun `a safety copy is never aged out by the daily ring`() {
+        val file = File(folder.root, "winter-arc.json")
+        FileStore(file) { LocalDate.of(2026, 10, 1) }.save(real)
+        FileStore(file) { LocalDate.of(2026, 10, 1) }.save(real.copy(sessions = emptyList()))
+
+        // Three weeks of ordinary saves, which rolls the daily ring over completely.
+        (2..25).forEach { d ->
+            FileStore(file) { LocalDate.of(2026, 10, d) }.save(real.copy(sessions = emptyList()))
+        }
+
+        val safety = FileStore(file) { LocalDate.of(2026, 10, 25) }.snapshots().filter { it.beforeChange }
+        assertTrue("The copy taken when training was lost must still be there", safety.isNotEmpty())
+        assertEquals(real.finishedSessionCount, safety.first().sessionCount)
+    }
+}

@@ -87,6 +87,7 @@ fun SettingsScreen(
     var lastBackup by remember { mutableStateOf(autoBackup.lastBackupLabel) }
     var snapshots by remember { mutableStateOf(repository.snapshots()) }
     var restoring by remember { mutableStateOf<com.winterarc.core.Snapshot?>(null) }
+    var pendingImport by remember { mutableStateOf<AppData?>(null) }
 
     val pickFolder = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree(),
@@ -149,10 +150,13 @@ fun SettingsScreen(
             val text = runCatching {
                 context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
             }.getOrNull()
-            status = if (text != null && repository.importJson(text)) {
-                "Restored from backup."
+            val parsed = text?.let { repository.previewImport(it) }
+            if (parsed == null) {
+                status = "That file could not be read as a Winter Arc backup."
             } else {
-                "That file could not be read as a Winter Arc backup."
+                // Shown before it is applied: restoring an older export over newer training is
+                // the easy way to lose months without anything appearing to go wrong.
+                pendingImport = parsed
             }
         }
     }
@@ -369,15 +373,16 @@ fun SettingsScreen(
                 SectionHeader("Roll back a day")
                 ArcCard {
                     Text(
-                        "A dated copy is kept on the device for each of the last fourteen days " +
-                            "you trained. If something goes wrong, go back to one.",
+                        "A dated copy is kept for each of the last fourteen days you trained, and " +
+                            "another is taken automatically any time something is about to reduce " +
+                            "your training. The fullest is listed first.",
                         style = MaterialTheme.typography.bodySmall,
                         color = W.Faint,
                     )
                     Spacer(Modifier.height(12.dp))
                     snapshots.forEach { snap ->
                         SettingRow(
-                            title = snap.date,
+                            title = if (snap.beforeChange) "${snap.date}  ·  before a change" else snap.date,
                             subtitle = "${snap.sessionCount} sessions · ${snap.setCount} sets",
                             onClick = { restoring = snap },
                             trailing = {
@@ -538,6 +543,38 @@ fun SettingsScreen(
                 editingLift = null
             },
         )
+    }
+
+    pendingImport?.let { incoming ->
+        val current = data.sessions.count { it.finished }
+        val arriving = incoming.sessions.count { it.finished }
+        val losing = arriving < current
+
+        WinterSheet(onDismiss = { pendingImport = null }) {
+            SheetTitle(
+                "Restore this backup?",
+                if (losing) {
+                    "That backup holds $arriving sessions. You currently have $current. " +
+                        "Restoring replaces everything, so ${current - arriving} would be dropped — a copy " +
+                        "of what you have now is kept automatically, and appears under Roll back a day."
+                } else {
+                    "That backup holds $arriving sessions. You currently have $current. " +
+                        "Restoring replaces everything on this device with it."
+                },
+            )
+            GoldButton(
+                if (losing) "Restore anyway" else "Restore",
+                {
+                    repository.applyImport(incoming)
+                    snapshots = repository.snapshots()
+                    status = "Restored $arriving sessions from the backup."
+                    pendingImport = null
+                },
+                Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(9.dp))
+            GhostButton("Cancel", { pendingImport = null }, Modifier.fillMaxWidth())
+        }
     }
 
     restoring?.let { snap ->

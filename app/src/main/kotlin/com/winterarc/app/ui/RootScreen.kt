@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.winterarc.app.Repository
@@ -96,6 +97,22 @@ fun RootScreen(
     val stack = remember { mutableStateListOf<Overlay>() }
     val restTimer = remember { RestTimerController() }
 
+    // A backup that has quietly stopped is worse than no backup, because it is trusted. The state
+    // of the safety net is therefore surfaced on the main screen rather than buried in settings.
+    val autoBackup = (LocalContext.current.applicationContext as com.winterarc.app.WinterArcApplication).autoBackup
+    val backupWarning: String? = remember(data, ready) {
+        val age = System.currentTimeMillis() - autoBackup.lastBackupAt
+        when {
+            autoBackup.folderUri == null ->
+                "Your training exists in one place. Choose a backup folder."
+            autoBackup.lastBackupAt == 0L ->
+                "Backup folder set, but nothing has been written yet."
+            age > 7L * 24 * 60 * 60 * 1000 ->
+                "No backup written in over a week. Check the folder is still reachable."
+            else -> null
+        }
+    }
+
     fun push(overlay: Overlay) {
         if (stack.lastOrNull() != overlay) stack.add(overlay)
     }
@@ -135,6 +152,7 @@ fun RootScreen(
                                 onOpenPlan = { push(Overlay.Plan) },
                                 onOpenSettings = { push(Overlay.Settings) },
                                 onOpenLibrary = { push(Overlay.Library) },
+                                backupWarning = backupWarning,
                             )
 
                             Tab.PROGRESS -> DashboardScreen(

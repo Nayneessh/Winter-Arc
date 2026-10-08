@@ -80,6 +80,7 @@ fun TodayScreen(
     onOpenPlan: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenLibrary: () -> Unit,
+    backupWarning: String? = null,
 ) {
     val today = remember { LocalDate.now() }
     val routine = data.routineFor(today.dayOfWeek)
@@ -120,6 +121,35 @@ fun TodayScreen(
             RoundIcon(Icons.Filled.CalendarMonth, "Programme", onOpenPlan)
             Spacer(Modifier.width(9.dp))
             RoundIcon(Icons.Filled.Settings, "Settings", onOpenSettings)
+        }
+
+        if (backupWarning != null) {
+            Spacer(Modifier.height(16.dp))
+            ArcCard(
+                onClick = onOpenSettings,
+                brush = Brush.verticalGradient(listOf(W.Warn.copy(alpha = 0.16f), W.Night)),
+                borderColor = W.Warn.copy(alpha = 0.35f),
+                padding = PaddingValues(15.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(7.dp).clip(CircleShape).background(W.Warn))
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Label("Safety net", color = W.Warn)
+                        Spacer(Modifier.height(5.dp))
+                        Text(
+                            backupWarning,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = W.Ink,
+                        )
+                    }
+                    Text(
+                        "FIX",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = W.Warn,
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(18.dp))
