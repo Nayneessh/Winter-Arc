@@ -8,6 +8,9 @@ class WinterArcApplication : Application() {
     lateinit var repository: Repository
         private set
 
+    lateinit var autoBackup: AutoBackup
+        private set
+
     override fun onCreate() {
         super.onCreate()
         repository = Repository(
@@ -18,6 +21,9 @@ class WinterArcApplication : Application() {
                 assets.open(SEED_ASSET).bufferedReader().use { it.readText() }
             },
         )
+        autoBackup = AutoBackup(this)
+        repository.onPersisted = { json -> autoBackup.write(json) }
+
         // Synchronous by design -- see Repository.load().
         repository.load()
     }

@@ -81,6 +81,28 @@ fun SettingsScreen(
     var confirmReset by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
 
+    val app = context.applicationContext as com.winterarc.app.WinterArcApplication
+    val autoBackup = app.autoBackup
+    var folderLabel by remember { mutableStateOf(autoBackup.folderLabel) }
+    var lastBackup by remember { mutableStateOf(autoBackup.lastBackupLabel) }
+    var snapshots by remember { mutableStateOf(repository.snapshots()) }
+    var restoring by remember { mutableStateOf<com.winterarc.core.Snapshot?>(null) }
+
+    val pickFolder = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            autoBackup.setFolder(uri)
+            folderLabel = autoBackup.folderLabel
+            status = if (autoBackup.write(repository.exportJson())) {
+                lastBackup = autoBackup.lastBackupLabel
+                "Backup folder set. A copy is written every time you leave the app."
+            } else {
+                "That folder could not be written to. Try another."
+            }
+        }
+    }
+
     val exportJson = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json"),
     ) { uri ->
@@ -291,6 +313,86 @@ fun SettingsScreen(
             )
 
             Spacer(Modifier.height(22.dp))
+            SectionHeader("Safety net")
+            ArcCard {
+                Text(
+                    "Training lives in one file inside the app, which nothing else can reach and " +
+                        "uninstalling destroys. Choose a folder and a copy is written there every " +
+                        "time you leave the app — visible in Files, kept if the app is removed, " +
+                        "and synced by Drive or your file app if that folder is.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = W.Muted,
+                )
+                Spacer(Modifier.height(16.dp))
+                GhostButton(
+                    folderLabel?.let { "Folder: $it" } ?: "Choose a backup folder",
+                    { pickFolder.launch(null) },
+                    Modifier.fillMaxWidth(),
+                    icon = Icons.Filled.Download,
+                )
+                if (folderLabel != null) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        lastBackup?.let { "Last copy written $it" } ?: "No copy written yet",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (lastBackup == null) W.Warn else W.Good,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    GhostButton(
+                        "Back up now",
+                        {
+                            status = if (autoBackup.write(repository.exportJson())) {
+                                lastBackup = autoBackup.lastBackupLabel
+                                "Copy written."
+                            } else {
+                                "Could not write to that folder. Choose it again."
+                            }
+                        },
+                        Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(9.dp))
+                    GhostButton(
+                        "Stop automatic backups",
+                        {
+                            autoBackup.clearFolder()
+                            folderLabel = null
+                            lastBackup = null
+                        },
+                        Modifier.fillMaxWidth(),
+                        color = W.Warn,
+                    )
+                }
+            }
+
+            if (snapshots.isNotEmpty()) {
+                Spacer(Modifier.height(14.dp))
+                SectionHeader("Roll back a day")
+                ArcCard {
+                    Text(
+                        "A dated copy is kept on the device for each of the last fourteen days " +
+                            "you trained. If something goes wrong, go back to one.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = W.Faint,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    snapshots.forEach { snap ->
+                        SettingRow(
+                            title = snap.date,
+                            subtitle = "${snap.sessionCount} sessions · ${snap.setCount} sets",
+                            onClick = { restoring = snap },
+                            trailing = {
+                                Text(
+                                    "RESTORE",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = W.Gold,
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
             SectionHeader("Your data")
             ArcCard {
                 Text(
@@ -436,6 +538,32 @@ fun SettingsScreen(
                 editingLift = null
             },
         )
+    }
+
+    restoring?.let { snap ->
+        WinterSheet(onDismiss = { restoring = null }) {
+            SheetTitle(
+                "Go back to ${snap.date}?",
+                "Everything is replaced by the copy saved that day: ${snap.sessionCount} " +
+                    "sessions, ${snap.setCount} sets. Anything logged since is lost, so back up " +
+                    "first if you are unsure.",
+            )
+            GoldButton(
+                "Restore ${snap.date}",
+                {
+                    status = if (repository.restoreSnapshot(snap.name)) {
+                        snapshots = repository.snapshots()
+                        "Restored the copy from ${snap.date}."
+                    } else {
+                        "That copy could not be read."
+                    }
+                    restoring = null
+                },
+                Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(9.dp))
+            GhostButton("Cancel", { restoring = null }, Modifier.fillMaxWidth())
+        }
     }
 
     if (confirmReset) {

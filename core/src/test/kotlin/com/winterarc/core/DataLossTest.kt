@@ -197,3 +197,88 @@ class BackupRecoveryTest {
         assertTrue(store.load()!!.isBlank)
     }
 }
+
+/**
+ * Dated snapshots.
+ *
+ * One backup generation survives exactly one mistake. The write that destroyed a month of
+ * training put the real data into the backup and the next write spent it, which is how a single
+ * generation turns into no copies at all.
+ */
+class SnapshotTest {
+
+    @get:Rule
+    val folder = TemporaryFolder()
+
+    private val real: AppData get() = Seed.initial(LocalDate.of(2026, 9, 5))
+
+    private fun storeOn(date: LocalDate) =
+        FileStore(File(folder.root, "winter-arc.json")) { date }
+
+    @Test
+    fun `saving leaves a dated copy behind`() {
+        val store = storeOn(LocalDate.of(2026, 10, 8))
+        store.save(real)
+
+        val snapshots = store.snapshots()
+        assertEquals(1, snapshots.size)
+        assertEquals("2026-10-08", snapshots.single().date)
+        assertEquals(real.sessions.size, snapshots.single().sessionCount)
+    }
+
+    @Test
+    fun `a day's snapshot is updated in place rather than piling up`() {
+        val day = LocalDate.of(2026, 10, 8)
+        val store = storeOn(day)
+        repeat(5) { store.save(real) }
+        assertEquals(1, store.snapshots().size)
+    }
+
+    @Test
+    fun `each training day keeps its own copy, newest first`() {
+        listOf(6, 7, 8).forEach { d ->
+            storeOn(LocalDate.of(2026, 10, d)).save(real)
+        }
+        val dates = storeOn(LocalDate.of(2026, 10, 8)).snapshots().map { it.date }
+        assertEquals(listOf("2026-10-08", "2026-10-07", "2026-10-06"), dates)
+    }
+
+    @Test
+    fun `only a fortnight is kept, so the folder cannot grow without bound`() {
+        (1..20).forEach { d -> storeOn(LocalDate.of(2026, 10, d)).save(real) }
+        val snapshots = storeOn(LocalDate.of(2026, 10, 20)).snapshots()
+        assertEquals(14, snapshots.size)
+        assertEquals("2026-10-20", snapshots.first().date)
+        assertEquals("2026-10-07", snapshots.last().date)
+    }
+
+    @Test
+    fun `a snapshot restores the training it held`() {
+        val store = storeOn(LocalDate.of(2026, 10, 8))
+        store.save(real)
+        val restored = store.readSnapshot(store.snapshots().single().name)
+        assertNotNull(restored)
+        assertEquals(real.sessions.size, restored!!.sessions.size)
+        assertFalse(restored.isBlank)
+    }
+
+    @Test
+    fun `a blank tree never becomes a snapshot`() {
+        val store = storeOn(LocalDate.of(2026, 10, 8))
+        store.save(AppData())
+        assertTrue(store.snapshots().isEmpty())
+    }
+
+    @Test
+    fun `yesterday's copy survives today being wiped`() {
+        // The whole point: the bug lands today, and yesterday is still on disk.
+        storeOn(LocalDate.of(2026, 10, 7)).save(real)
+        val today = storeOn(LocalDate.of(2026, 10, 8))
+        today.save(AppData())
+
+        val snapshots = today.snapshots()
+        assertEquals(1, snapshots.size)
+        assertEquals("2026-10-07", snapshots.single().date)
+        assertFalse(today.readSnapshot(snapshots.single().name)!!.isBlank)
+    }
+}

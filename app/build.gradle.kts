@@ -16,8 +16,8 @@ android {
         applicationId = "com.winterarc.app"
         minSdk = 26          // java.time is available natively from 26, so no desugaring is needed
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.5"
+        versionCode = 7
+        versionName = "1.6"
     }
 
     // One signing key, committed, used by every build type.
@@ -79,6 +79,8 @@ dependencies {
     implementation(project(":core"))
 
     implementation("androidx.core:core-ktx:1.15.0")
+    // Writing backups into a folder the user picks, which survives uninstalling the app.
+    implementation("androidx.documentfile:documentfile:1.0.1")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")

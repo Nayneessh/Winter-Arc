@@ -2,6 +2,7 @@ package com.winterarc.app
 
 import com.winterarc.core.AppData
 import com.winterarc.core.CsvExport
+import com.winterarc.core.DataCodec
 import com.winterarc.core.FileStore
 import com.winterarc.core.Seed
 import kotlinx.coroutines.CoroutineScope
@@ -47,6 +48,14 @@ class Repository(
     val ready: StateFlow<Boolean> = _ready.asStateFlow()
 
     private var saveJob: Job? = null
+
+    /**
+     * Called with the encoded state whenever it is committed to disk.
+     *
+     * The off-device backup hangs off this rather than off every edit: it fires when the app goes
+     * to the background, which is often enough to be safe and rare enough not to thrash storage.
+     */
+    var onPersisted: ((String) -> Unit)? = null
 
     /**
      * Reads the save file. Synchronous, and that is the point.
@@ -108,7 +117,23 @@ class Repository(
     fun flush() {
         if (!_ready.value) return
         saveJob?.cancel()
-        runBlocking(Dispatchers.IO) { store.save(_data.value) }
+        runBlocking(Dispatchers.IO) {
+            val snapshot = _data.value
+            if (store.save(snapshot)) {
+                runCatching { onPersisted?.invoke(DataCodec.encode(snapshot)) }
+            }
+        }
+    }
+
+    /** Dated copies held on the device, newest first. */
+    fun snapshots(): List<com.winterarc.core.Snapshot> = store.snapshots()
+
+    /** Puts a dated copy back. Returns false if it could not be read. */
+    fun restoreSnapshot(name: String): Boolean {
+        val restored = store.readSnapshot(name) ?: return false
+        _data.value = restored
+        store.save(restored)
+        return true
     }
 
     fun exportJson(): String = store.exportJson(_data.value)

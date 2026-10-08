@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.DayOfWeek
 
 /**
  * The entire application state, in one serialisable tree.
@@ -99,10 +99,14 @@ object DataCodec {
  * temporary file first and are renamed into place only once fully written; the previous good
  * file is kept as `.bak` and is read if the main file will not parse.
  */
-class FileStore(private val file: File) {
+class FileStore(
+    private val file: File,
+    private val today: () -> LocalDate = { LocalDate.now() },
+) {
 
     private val tempFile = File(file.parentFile, file.name + ".tmp")
     private val backupFile = File(file.parentFile, file.name + ".bak")
+    private val snapshotDir = File(file.parentFile, "snapshots")
 
     /**
      * Returns the best readable state, or null when there is genuinely nothing yet.
@@ -166,10 +170,53 @@ class FileStore(private val file: File) {
             file.writeText(text)
             tempFile.delete()
         }
+        writeDailySnapshot(data)
         return true
     }
 
+    /**
+     * Keeps one dated copy per day, for the last [SNAPSHOT_DAYS] days that saw a save.
+     *
+     * One backup generation was not enough. The write that destroyed a month of training put the
+     * real data into the backup, and the very next write spent it -- a single generation only
+     * survives a single mistake, and mistakes arrive in pairs. A fortnight of dated copies means
+     * a bad write has to go unnoticed for two weeks before anything is actually lost.
+     */
+    private fun writeDailySnapshot(data: AppData) {
+        if (data.isBlank) return
+        try {
+            snapshotDir.mkdirs()
+            File(snapshotDir, "winter-arc-${today()}.json").writeText(DataCodec.encode(data))
+            snapshotFiles().drop(SNAPSHOT_DAYS).forEach { it.delete() }
+        } catch (_: Exception) {
+            // A snapshot is a convenience. Never let it fail a save of the real file.
+        }
+    }
+
+    private fun snapshotFiles(): List<File> =
+        snapshotDir.listFiles()
+            ?.filter { it.isFile && it.name.endsWith(".json") }
+            ?.sortedByDescending { it.name }
+            .orEmpty()
+
+    /** Dated copies available to restore, newest first. */
+    fun snapshots(): List<Snapshot> = snapshotFiles().mapNotNull { f ->
+        val parsed = readParse(f) ?: return@mapNotNull null
+        Snapshot(
+            name = f.name,
+            date = f.name.removePrefix("winter-arc-").removeSuffix(".json"),
+            sessionCount = parsed.sessions.count { it.finished },
+            setCount = parsed.sessions.sumOf { it.workingSetCount },
+        )
+    }
+
+    fun readSnapshot(name: String): AppData? = readParse(File(snapshotDir, name))
+
     fun exportJson(data: AppData): String = DataCodec.encode(data)
+
+    private companion object {
+        const val SNAPSHOT_DAYS = 14
+    }
 }
 
 /**
@@ -232,6 +279,14 @@ object CsvExport {
             value
         }
 }
+
+/** One dated copy of everything, kept so a bad write is survivable. */
+data class Snapshot(
+    val name: String,
+    val date: String,
+    val sessionCount: Int,
+    val setCount: Int,
+)
 
 /** A stable "today" seam so date-dependent logic can be tested without waiting for midnight. */
 fun interface Clock {
