@@ -279,14 +279,17 @@ class ActionsTest {
     @Test
     fun `a whole new routine can be created and scheduled`() {
         var data = baseData()
+        // Onto the programme actually in use -- scheduling a day onto a retired programme would
+        // not show up on the calendar, which is the thing this test is about.
+        val programmeId = data.activeProgramme!!.id
         val routine = Routine(
             id = "custom-routine",
             name = "Sunday Conditioning",
             days = listOf(java.time.DayOfWeek.SUNDAY),
         )
-        data = Actions.addRoutine(data, "programme-winter-arc", routine)
+        data = Actions.addRoutine(data, programmeId, routine)
         data = Actions.addPlanItem(
-            data, "programme-winter-arc", "custom-routine",
+            data, programmeId, "custom-routine",
             PlanItem(exerciseId = "run", group = "", sets = 1, repLow = 1, repHigh = 1),
         )
 

@@ -476,6 +476,7 @@ private fun ExerciseCard(
     val accentColor = when (exercise.priority) {
         Priority.ARMS -> W.Gold
         Priority.BACK -> W.Cyan
+        Priority.LEGS -> W.Good
         Priority.NONE -> W.Muted
     }
 

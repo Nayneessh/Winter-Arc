@@ -38,7 +38,7 @@ class StoreTest {
         assertEquals(79.4, loaded.latestWeightKg!!, 0.0)
         assertEquals(37.5, loaded.body.last().measurementsCm[MeasurementSites.ARM_LEFT]!!, 0.0)
         assertEquals(data.exercises.size, loaded.exercises.size)
-        assertEquals(data.programmes.single().routines.size, loaded.programmes.single().routines.size)
+        assertEquals(data.programmes, loaded.programmes)
     }
 
     @Test

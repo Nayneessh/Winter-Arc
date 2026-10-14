@@ -27,6 +27,14 @@ data class AppData(
     val prefs: Prefs = Prefs(),
     /** The workout currently being performed, if any. Kept apart from finished history. */
     val activeSession: Session? = null,
+    /**
+     * Upgrades already applied to this document.
+     *
+     * A programme change has to reach devices that already hold data, where the seed is never
+     * read again. Recording what has run means an upgrade applies exactly once and never fights
+     * a choice the user makes afterwards.
+     */
+    val appliedMigrations: List<String> = emptyList(),
 ) {
     companion object {
         const val CURRENT_VERSION = 1

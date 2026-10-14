@@ -72,7 +72,7 @@ class Repository(
      */
     fun load() {
         val existing = store.load()
-        _data.value = when {
+        val loaded = when {
             existing == null -> seedAndPersist()
             // A stored file with nothing in it is not a user who deleted everything -- erasing
             // restores a catalogue. It is the wiped file the race above produced, so it is treated
@@ -80,6 +80,13 @@ class Repository(
             existing.isBlank -> seedAndPersist()
             else -> existing
         }
+
+        // A programme change has to reach devices that already hold data, where the seed is never
+        // consulted again. Migrations add; they never remove training.
+        val migrated = com.winterarc.core.Migrations.apply(loaded)
+        if (migrated != loaded) store.save(migrated)
+
+        _data.value = migrated
         _ready.value = true
     }
 

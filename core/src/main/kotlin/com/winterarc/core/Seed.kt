@@ -328,8 +328,11 @@ object Seed {
 
     private const val FIRST_SESSION_START = 1_788_600_000_000L
 
-    /** The rules from the workbook that govern how the programme is run. */
-    val principles: List<Pair<String, String>> = listOf(
+    /** The rules of the programme in use. Delegated so there is one copy, not two. */
+    val principles: List<Pair<String, String>> get() = Programme41.principles
+
+    /** The rules of the original workbook, kept with the programme they belong to. */
+    val legacyPrinciples: List<Pair<String, String>> = listOf(
         "Recomp rule" to
             "Eat at maintenance, hit protein, let fat fall while the lifts rise. The scale should barely move.",
         "Deload" to
@@ -368,7 +371,7 @@ object Seed {
      */
     fun initial(today: LocalDate): AppData = AppData(
         exercises = catalogue,
-        programmes = listOf(programme),
+        programmes = listOf(programme.copy(active = false), Programme41.programme),
         sessions = listOf(firstSession),
         body = listOf(
             BodyEntry(
@@ -381,5 +384,6 @@ object Seed {
         ),
         goals = goals,
         prefs = Prefs(),
+        appliedMigrations = listOf(Migrations.WINTER_ARC_V41),
     )
 }

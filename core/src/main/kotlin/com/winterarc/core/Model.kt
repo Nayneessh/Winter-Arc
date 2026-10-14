@@ -82,6 +82,7 @@ enum class Priority(val display: String, val symbol: String) {
     NONE("", ""),
     ARMS("Arm priority", "★"),
     BACK("Back density", "◆"),
+    LEGS("Leg work", "▲"),
 }
 
 /** Colour identity for a routine, so each training day is recognisable at a glance. */
