@@ -31,18 +31,48 @@ jobs:
 
       # :core holds every calculation and the whole model, and is pure Kotlin/JVM. Running it
       # first means a logic regression fails in seconds rather than after an APK assembly.
+      # Gradle's own log is served from a host some clients cannot reach, so every compiler
+      # error is re-emitted as a workflow annotation, which the API does return. Without this a
+      # compile failure is visible only as "exit code 1", which is not a diagnosis.
       - name: Run core tests
-        run: ./gradlew :core:test
+        run: |
+          set -o pipefail
+          ./gradlew :core:test 2>&1 | tee gradle.log || {
+            grep -E "^e: |^w: .*error|FAILURE: |Caused by: |^> Task .*FAILED" gradle.log \
+              | head -25 \
+              | while IFS= read -r line; do echo "::error::${line}"; done
+            exit 1
+          }
 
+      # Gradle's own log is served from a host some clients cannot reach, so every compiler
+      # error is re-emitted as a workflow annotation, which the API does return. Without this a
+      # compile failure is visible only as "exit code 1", which is not a diagnosis.
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug 2>&1 | tee gradle.log || {
+            grep -E "^e: |^w: .*error|FAILURE: |Caused by: |^> Task .*FAILED" gradle.log \
+              | head -25 \
+              | while IFS= read -r line; do echo "::error::${line}"; done
+            exit 1
+          }
 
       - name: Lint
         run: ./gradlew :app:lintDebug
         continue-on-error: true
 
+      # Gradle's own log is served from a host some clients cannot reach, so every compiler
+      # error is re-emitted as a workflow annotation, which the API does return. Without this a
+      # compile failure is visible only as "exit code 1", which is not a diagnosis.
       - name: Build release APK
-        run: ./gradlew :app:assembleRelease
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleRelease 2>&1 | tee gradle.log || {
+            grep -E "^e: |^w: .*error|FAILURE: |Caused by: |^> Task .*FAILED" gradle.log \
+              | head -25 \
+              | while IFS= read -r line; do echo "::error::${line}"; done
+            exit 1
+          }
 
       # A green compile is not the same as an installable artifact, so each archive is opened
       # and checked for the two things that make it an APK at all.
