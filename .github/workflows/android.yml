@@ -29,6 +29,25 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # A malformed resource is only discovered deep inside resource merging, minutes into a
+      # build, and the message does not name the character at fault. This finds it in a second
+      # and says exactly where -- a stray "--" inside an XML comment being the classic.
+      - name: Check resource XML is well-formed
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys, xml.dom.minidom
+          bad = []
+          for f in sorted(pathlib.Path("app/src").rglob("*.xml")):
+              try:
+                  xml.dom.minidom.parse(str(f))
+              except Exception as e:
+                  bad.append(f"{f}: {e}")
+          for b in bad:
+              print(f"::error::{b}")
+          print(f"Checked {len(list(pathlib.Path('app/src').rglob('*.xml')))} XML files.")
+          sys.exit(1 if bad else 0)
+          PY
+
       # :core holds every calculation and the whole model, and is pure Kotlin/JVM. Running it
       # first means a logic regression fails in seconds rather than after an APK assembly.
       # Gradle's own log is served from a host some clients cannot reach, so every compiler

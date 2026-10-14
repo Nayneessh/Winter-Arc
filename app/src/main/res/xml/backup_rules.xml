@@ -9,7 +9,7 @@
     phone arrives with the same means of recovery the original had.
 
     Shared preferences are deliberately left out. They hold the cloud sign-in tokens, which should
-    not travel, and the backup folder's permission grant, which cannot -- restoring it would show
+    not travel, and the backup folder's permission grant, which cannot. Restoring it would show
     a folder that looks chosen but can no longer be written to.
 -->
 <full-backup-content>
