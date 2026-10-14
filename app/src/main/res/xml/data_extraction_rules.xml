@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android's own backup, for API 31 and above. See backup_rules.xml for why the whole file
+    directory is taken rather than the save file alone.
+
+    cloud-backup carries training to the Google account, so it survives a lost or broken phone.
+    device-transfer carries it directly when moving to a new phone.
+-->
 <data-extraction-rules>
     <cloud-backup>
-        <include domain="file" path="winter-arc.json" />
+        <include domain="file" path="." />
     </cloud-backup>
     <device-transfer>
-        <include domain="file" path="winter-arc.json" />
+        <include domain="file" path="." />
     </device-transfer>
 </data-extraction-rules>

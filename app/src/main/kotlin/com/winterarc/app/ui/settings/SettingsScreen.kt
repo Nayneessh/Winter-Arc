@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -35,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -118,6 +120,21 @@ fun SettingsScreen(
     var busy by remember { mutableStateOf(false) }
     var cloudBackups by remember { mutableStateOf<List<com.winterarc.app.CloudBackup>>(emptyList()) }
     var pullingDown by remember { mutableStateOf<com.winterarc.app.CloudBackup?>(null) }
+
+    // Re-read whenever anything that feeds it moves. Everything here is a cheap property read or
+    // a directory listing, so there is no reason to let the readout go stale while it is on screen.
+    val health = remember(folderLabel, lastBackup, connectedAs, lastUpload, snapshots) {
+        com.winterarc.core.BackupHealth.assess(
+            snapshotCount = snapshots.size,
+            hasLocalBackupFile = repository.hasRecoverableBackup(),
+            folderConfigured = folderLabel != null,
+            folderLastWriteMillis = autoBackup.lastBackupAtMillis,
+            folderConsecutiveFailures = autoBackup.consecutiveFailures,
+            cloudConnected = connectedAs != null,
+            cloudLastUploadMillis = cloud.lastUploadAtMillis,
+            nowMillis = System.currentTimeMillis(),
+        )
+    }
 
     fun refreshCloudList() {
         scope.launch {
@@ -338,6 +355,8 @@ fun SettingsScreen(
             )
 
             Spacer(Modifier.height(22.dp))
+            BackupHealthPanel(health)
+
             SectionHeader("Cloud backup")
             ArcCard {
                 if (connectedAs == null) {
@@ -486,10 +505,19 @@ fun SettingsScreen(
                 Text(
                     "Training lives in one file inside the app, which nothing else can reach and " +
                         "uninstalling destroys. Choose a folder and a copy is written there every " +
-                        "time you leave the app — visible in Files, kept if the app is removed, " +
-                        "and synced by Drive or your file app if that folder is.",
+                        "time you leave the app, then read back to confirm it truly landed.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = W.Muted,
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "Pick a folder belonging to a cloud app if one is offered — Dropbox, " +
+                        "OneDrive and Nextcloud all appear in this picker and put the copy off " +
+                        "this phone. Google Drive does not offer one on Android, so a Drive " +
+                        "folder cannot be chosen here. A folder in ordinary storage still " +
+                        "survives the app being uninstalled, but not the phone being lost.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = W.Faint,
                 )
                 Spacer(Modifier.height(16.dp))
                 GhostButton(
@@ -963,4 +991,72 @@ private fun LiftGoalSheet(
             color = W.Ghost,
         )
     }
+}
+
+/**
+ * What is actually keeping the training, and the one thing left to do about it.
+ *
+ * Every backup here can stop working without anything appearing to go wrong: a folder permission
+ * is withdrawn, a provider goes offline, a project is paused, an account signs itself out. The
+ * month of training that was lost was lost quietly, so this is shown without being asked for, and
+ * it counts only the copies that would survive losing this phone.
+ */
+@Composable
+private fun BackupHealthPanel(status: com.winterarc.core.BackupStatus) {
+    val tone = when (status.verdict) {
+        com.winterarc.core.Verdict.SAFE -> W.Good
+        com.winterarc.core.Verdict.THIN -> W.Warn
+        com.winterarc.core.Verdict.AT_RISK -> W.Bad
+    }
+
+    SectionHeader("Where your training is kept")
+    ArcCard(borderColor = tone.copy(alpha = 0.35f)) {
+        Text(
+            status.headline,
+            style = MaterialTheme.typography.titleMedium,
+            color = tone,
+        )
+        status.advice?.let { advice ->
+            Spacer(Modifier.height(8.dp))
+            Text(advice, style = MaterialTheme.typography.bodyMedium, color = W.Ink)
+        }
+
+        Spacer(Modifier.height(16.dp))
+        HairLine()
+
+        status.protections.forEach { protection ->
+            Spacer(Modifier.height(14.dp))
+            Row(verticalAlignment = Alignment.Top) {
+                Box(
+                    Modifier
+                        .padding(top = 6.dp)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(protectionColor(protection.state)),
+                )
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        protection.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = W.Ink,
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        protection.detail,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = W.Muted,
+                    )
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(22.dp))
+}
+
+private fun protectionColor(state: com.winterarc.core.ProtectionState): Color = when (state) {
+    com.winterarc.core.ProtectionState.ACTIVE -> W.Good
+    com.winterarc.core.ProtectionState.STALE -> W.Warn
+    com.winterarc.core.ProtectionState.FAILING -> W.Bad
+    com.winterarc.core.ProtectionState.OFF -> W.Ghost
 }

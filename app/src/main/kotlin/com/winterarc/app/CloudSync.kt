@@ -42,6 +42,9 @@ class CloudSync(context: Context) {
     val isSignedIn: Boolean get() = accessToken != null && signedInAccount != null
     val lastUploadLabel: String? get() = prefs.getString(KEY_LAST_UPLOAD, null)
 
+    /** Null until something has actually been uploaded, for the backup health readout. */
+    val lastUploadAtMillis: Long? get() = prefs.getLong(KEY_LAST_UPLOAD_AT, 0L).takeIf { it > 0L }
+
     private val accessToken: String? get() = prefs.getString(KEY_ACCESS, null)
     private val refreshToken: String? get() = prefs.getString(KEY_REFRESH, null)
     private val userId: String? get() = prefs.getString(KEY_USER, null)
@@ -153,7 +156,10 @@ class CloudSync(context: Context) {
     }
 
     private fun markUploaded() {
-        prefs.edit().putString(KEY_LAST_UPLOAD, nowLabel()).apply()
+        prefs.edit()
+            .putString(KEY_LAST_UPLOAD, nowLabel())
+            .putLong(KEY_LAST_UPLOAD_AT, System.currentTimeMillis())
+            .apply()
     }
 
     /** Stored versions, fullest first — the order that matters when recovering. */
@@ -269,5 +275,6 @@ class CloudSync(context: Context) {
         const val KEY_ACCOUNT = "account"
         const val KEY_USER = "user"
         const val KEY_LAST_UPLOAD = "last_upload"
+        const val KEY_LAST_UPLOAD_AT = "last_upload_at"
     }
 }

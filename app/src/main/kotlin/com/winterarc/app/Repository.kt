@@ -135,6 +135,9 @@ class Repository(
     /** Dated copies held on the device, newest first. */
     fun snapshots(): List<com.winterarc.core.Snapshot> = store.snapshots()
 
+    /** Whether the spare of the last good save exists, for the backup health readout. */
+    fun hasRecoverableBackup(): Boolean = store.hasRecoverableBackup()
+
     /** Puts a dated copy back. Returns false if it could not be read. */
     fun restoreSnapshot(name: String): Boolean {
         val restored = store.readSnapshot(name) ?: return false
